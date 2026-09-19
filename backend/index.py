@@ -17,7 +17,6 @@ import json
 from pathlib import Path
 
 import numpy as np
-from sentence_transformers import SentenceTransformer
 
 ROOT = Path(__file__).resolve().parent
 CHUNKS = ROOT / "data" / "chunks.json"
@@ -48,7 +47,19 @@ def embed_inputs(chunk: dict) -> list[str]:
     return windows
 
 
+def fingerprint(chunks: list[dict]) -> str:
+    """Hash of everything that goes into an embedding, so search.py can tell when
+    chunks.json has changed since index.npy was built."""
+    h = hashlib.sha256()
+    for c in chunks:
+        h.update("\x1f".join([c["id"], c["section"], c["text"], *c["keywords"][:MAX_KEYWORDS]]).encode("utf-8"))
+        h.update(b"\x1e")
+    return h.hexdigest()
+
+
 def main() -> None:
+    from sentence_transformers import SentenceTransformer  # heavy; search.py only needs fingerprint()
+
     chunks = json.loads(CHUNKS.read_text(encoding="utf-8"))
     inputs, owner = [], []
     for i, c in enumerate(chunks):
@@ -66,12 +77,11 @@ def main() -> None:
     index /= np.linalg.norm(index, axis=1, keepdims=True)
     np.save(INDEX, index)
 
-    ids = "\n".join(c["id"] for c in chunks).encode("utf-8")
     META.write_text(json.dumps({
         "model": MODEL,
         "dim": int(index.shape[1]),
         "chunks": len(chunks),
-        "chunk_ids_sha256": hashlib.sha256(ids).hexdigest(),  # search.py can detect a stale index
+        "chunks_sha256": fingerprint(chunks),  # search.py refuses an index built from other chunks
         "window_words": WINDOW_WORDS,
         "stride_words": STRIDE_WORDS,
     }, indent=1), encoding="utf-8")

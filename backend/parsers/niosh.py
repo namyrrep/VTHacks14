@@ -338,6 +338,8 @@ def parse_reference(doc) -> list[dict]:
                 text=piece["text"],
                 keywords=[title] + ([title_case(sub)] if sub else []),
                 kind="reference",
+                protocol_id=f"{PREFIX}_ref_{slug(title, 30)}",
+                protocol=title,
             ))
     return chunks
 

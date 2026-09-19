@@ -133,7 +133,7 @@
     display: none;
   }
 
-  /* ---------- launch (search box + chips) ---------- */
+  /* ---------- launch (search box + hint) ---------- */
 
   #launch {
     padding: 24px;
@@ -157,8 +157,7 @@
     margin-bottom: 8px;
   }
 
-  #content.post-search .hero-label,
-  #content.post-search #chips {
+  #content.post-search .hero-label {
     display: none;
   }
 
@@ -174,30 +173,110 @@
     color: var(--dim);
   }
 
-  #chips {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 8px;
+  #hint {
     margin-top: 24px;
+    color: var(--dim);
+    font-size: 13px;
   }
 
-  .chip {
+  #content.post-search #hint {
+    display: none;
+  }
+
+  /* ---------- answer choices ---------- */
+
+  .choice {
+    display: block;
+    width: 100%;
     font: inherit;
-    color: var(--dim);
+    color: var(--fg);
     background: transparent;
     border: 1px solid var(--hairline);
-    padding: 8px 12px;
+    border-left-width: 2px;
+    padding: 12px 16px;
+    margin-bottom: 8px;
     cursor: pointer;
     text-align: left;
   }
 
-  .chip:hover, .chip:focus {
-    color: var(--fg);
+  .choice:hover, .choice:focus {
     border-color: var(--accent);
     outline: none;
   }
 
-  /* ---------- input / cursor ---------- */
+  .choice .answer-text {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  .choice .key {
+    color: var(--dim);
+  }
+
+  .choice:hover .key, .choice:focus .key {
+    color: var(--accent);
+  }
+
+  /* ---------- protocol view ---------- */
+
+  .back-link {
+    font: inherit;
+    color: var(--accent);
+    background: none;
+    border: 0;
+    padding: 0;
+    margin-bottom: 24px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    font-size: 13px;
+  }
+
+  .protocol-title {
+    font-weight: 700;
+    overflow-wrap: break-word;
+  }
+
+  .protocol-sub {
+    margin-top: 8px;
+    padding-bottom: 8px;
+    border-bottom: 1px solid var(--hairline);
+    color: var(--dim);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .part {
+    padding-top: 24px;
+  }
+
+  .part-head {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    margin-bottom: 8px;
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    color: var(--dim);
+  }
+
+  .part-head > * + *::before {
+    content: "·  ";
+    color: var(--dim);
+  }
+
+  .part-head .part-label {
+    color: var(--fg);
+  }
+
+  .part-head .from-answer {
+    color: var(--accent);
+  }
+
+    /* ---------- input / cursor ---------- */
 
   .input-wrap {
     position: relative;
@@ -369,6 +448,10 @@
     flex-direction: column;
     align-items: center;
     justify-content: center;
+  }
+
+  #map-view[hidden] {
+    display: none;
   }
 
   #map-wrap {
@@ -557,9 +640,9 @@
     </div>
     <div class="fields">
       <span>OFFLINE</span>
-      <span>3 MANUALS</span>
-      <span>412 SECTIONS</span>
-      <span>0 NETWORK CALLS</span>
+      <span id="stat-manuals">— MANUALS</span>
+      <span id="stat-protocols">— PROTOCOLS</span>
+      <span>0 EXTERNAL CALLS</span>
     </div>
   </div>
 
@@ -575,11 +658,7 @@
           <input id="query-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Query input" autofocus>
         </div>
       </div>
-      <div id="chips">
-        <button class="chip" type="button" data-q="placard requirements for a mixed load of unidentified corrosive cargo">placard for unidentified corrosive cargo</button>
-        <button class="chip" type="button" data-q="minimum oxygen level for confined space entry">confined space entry O2 minimum</button>
-        <button class="chip" type="button" data-q="aspirin dose for suspected cardiac chest pain">chest pain aspirin dose</button>
-      </div>
+      <div id="hint">Ask in plain English. Three answers come back — open one to read the whole protocol.</div>
     </div>
 
     <div id="scrollback-wrap">
@@ -5116,119 +5195,60 @@
 
 <script>
   /* ============================================================
-     BACKEND INTEGRATION POINT
+     BLACKOUT UI
 
-     Everything else in this file only ever touches the return
-     shape below. Replace the body of search() with a fetch call
-     and nothing else needs to change.
+     Two states after a question:
+       ANSWERS   one verbatim sentence from each of the top 3 protocols
+       PROTOCOL  the protocol behind the chosen sentence, part by part,
+                 each part cited to the page it is printed on
 
-     async function search(question) {
-       // returns:
-       // {
-       //   confident: boolean,
-       //   top_score: number,       // 0.0-1.0
-       //   results: [{
-       //     text: string,          // passage, verbatim from the manual
-       //     manual: string,        // "ERG 2024"
-       //     section: string,       // "Guide 111 - Mixed Load/Unidentified Cargo"
-       //     page: number,          // 172
-       //     score: number          // 0.0-1.0
-       //   }]
-       // }
-     }
+     All data comes from backend/server.py, which calls search.py.
+     Nothing here is generated: every line shown is manual text.
      ============================================================ */
 
-  function sleep(ms) {
-    return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  async function search(question) {
-    await sleep(150);
-
-    // TODO: replace everything below with:
-    //   const res = await fetch('/api/search', {
-    //     method: 'POST',
-    //     headers: { 'Content-Type': 'application/json' },
-    //     body: JSON.stringify({ question, k: 3 })
-    //   });
-    //   return await res.json();
-
-    const q = question.toLowerCase();
-
-    if (q.includes('placard') || q.includes('corrosive') || q.includes('hazmat') || q.includes('flammable')) {
-      return {
-        confident: true,
-        top_score: 0.81,
-        results: [
-          {
-            text: "If a placard cannot be identified from a safe distance, treat the load as an unidentified hazard. Isolate the area and deny entry until qualified personnel confirm the material. For fires involving mixed or unidentified cargo, use an extinguishing agent suited to the surrounding fire; do not use straight hose streams on the load itself.",
-            manual: "ERG 2024",
-            section: "Guide 111 - Mixed Load/Unidentified Cargo",
-            page: 172,
-            score: 0.81
-          },
-          {
-            text: "Initial isolation distance for unidentified spilled or leaking material should not be less than 50 meters (150 feet) in all directions. Increase distance if runoff is entering waterways or if vapor is visible.",
-            manual: "ERG 2024",
-            section: "Table 1 - Initial Isolation and Protective Action Distances",
-            page: 289,
-            score: 0.68
-          }
-        ]
-      };
+  const API = {
+    async search(question) {
+      const res = await fetch('/api/search', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ question, k: 3 })
+      });
+      if (!res.ok) throw new Error('search failed: ' + res.status);
+      return await res.json();
+    },
+    async stats() {
+      const res = await fetch('/api/stats');
+      if (!res.ok) throw new Error('stats failed: ' + res.status);
+      return await res.json();
     }
-
-    if (q.includes('confined space') || q.includes('lockout') || q.includes('atmosphere')) {
-      return {
-        confident: true,
-        top_score: 0.77,
-        results: [{
-          text: "Before entry into a permit-required confined space, test the atmosphere for oxygen content, flammability, and toxicity, in that order. Do not permit entry below 19.5% or above 23.5% oxygen without supplied-air respiratory protection. A trained attendant must remain outside the space for the full duration of entry.",
-          manual: "NIOSH Pocket Guide",
-          section: "Confined Space Entry",
-          page: 42,
-          score: 0.77
-        }]
-      };
-    }
-
-    if (q.includes('chest pain') || q.includes('cardiac') || q.includes('stemi')) {
-      return {
-        confident: true,
-        top_score: 0.74,
-        results: [{
-          text: "Administer aspirin 324 mg chewed if not already taken and no contraindication exists. Obtain a 12-lead ECG within 10 minutes of patient contact and transmit to the receiving facility if STEMI criteria are met. Do not delay transport to establish IV access.",
-          manual: "Statewide EMS Protocols",
-          section: "Cardiac - Chest Pain / STEMI",
-          page: 58,
-          score: 0.74
-        }]
-      };
-    }
-
-    return {
-      confident: false,
-      top_score: question.trim() ? 0.31 : 0.0,
-      results: []
-    };
-  }
-
-  /* ============================================================
-     rendering — everything below assumes only the shape above
-     ============================================================ */
-
-  // Client-side only: maps a manual name to its local PDF file so a
-  // result can deep-link to the exact page. Not part of the search()
-  // contract — the backend never needs to know these paths exist.
-  const MANUAL_FILES = {
-    'ERG 2024': 'manuals/erg-2024.pdf',
-    'NIOSH Pocket Guide': 'manuals/niosh-pocket-guide.pdf',
-    'Statewide EMS Protocols': 'manuals/statewide-ems-protocols.pdf'
   };
 
+  // manual name -> {short, pdf}, filled in from /api/stats so the backend stays the one
+  // place that knows which manuals are loaded
+  const MANUALS = {};
+
+  function shortName(manual) {
+    return (MANUALS[manual] && MANUALS[manual].short) || manual;
+  }
+
   function pdfLink(manual, page) {
-    const file = MANUAL_FILES[manual];
-    return file ? file + '#page=' + page : null;
+    const pdf = MANUALS[manual] && MANUALS[manual].pdf;
+    return pdf ? pdf + '#page=' + page : null;
+  }
+
+  function pageLabel(page, printed) {
+    // the PDF page is what the link jumps to; the printed page is what the paper copy
+    // shows, and the WV protocols print none
+    return printed ? 'p.' + page + ' (printed ' + printed + ')' : 'p.' + page;
+  }
+
+  function partTitle(section, protocol) {
+    // "T008 - Burns - Normal Saline (2/2)" under protocol "T008 - Burns" -> "Normal Saline (2/2)"
+    if (section.startsWith(protocol)) {
+      const rest = section.slice(protocol.length).replace(/^\s*[-–]\s*/, '').trim();
+      if (rest) return rest;
+    }
+    return section === protocol ? '' : section;
   }
 
   const content = document.getElementById('content');
@@ -5236,7 +5256,6 @@
   const scrollbackWrap = document.getElementById('scrollback-wrap');
   const queryInput = document.getElementById('query-input');
   const echoText = document.getElementById('echo-text');
-  const chips = document.getElementById('chips');
   const homeBtn = document.getElementById('home-btn');
   const mapView = document.getElementById('map-view');
   const tabSearch = document.getElementById('tab-search');
@@ -5246,17 +5265,7 @@
   const incidentPanel = document.getElementById('incident-panel');
 
   let hasSearched = false;
-
-  function goHome() {
-    setView('search');
-    hasSearched = false;
-    content.classList.remove('post-search');
-    content.classList.add('pre-search');
-    scrollback.innerHTML = '';
-    queryInput.value = '';
-    echoText.textContent = '';
-    queryInput.focus();
-  }
+  let currentResults = [];   // the results on screen, selectable by number key
 
   function setView(view) {
     if (view === 'map') {
@@ -5395,12 +5404,27 @@
     incidentPanel.appendChild(askBtn);
   }
 
-  function scrollToBottom() {
-    scrollbackWrap.scrollTop = scrollbackWrap.scrollHeight;
+  /* ---------------------------------------------- status bar */
+
+  async function loadStats() {
+    try {
+      const stats = await API.stats();
+      stats.manuals.forEach(m => { MANUALS[m.manual] = { short: m.short, pdf: m.pdf }; });
+      document.getElementById('stat-manuals').textContent =
+        stats.manuals.length + ' MANUALS';
+      document.getElementById('stat-protocols').textContent =
+        stats.protocols.toLocaleString() + ' PROTOCOLS';
+    } catch (err) {
+      document.getElementById('stat-manuals').textContent = 'BACKEND OFFLINE';
+      document.getElementById('stat-protocols').textContent = '';
+    }
   }
 
-  function renderResult(container, response) {
+  /* ---------------------------------------------- answer choices */
+
+  function renderChoices(container, response) {
     container.innerHTML = '';
+    currentResults = [];
 
     if (!response.confident || !response.results || response.results.length === 0) {
       const refusal = document.createElement('div');
@@ -5416,13 +5440,20 @@
       return;
     }
 
-    response.results.forEach(result => {
-      const block = document.createElement('div');
-      block.className = 'result-block';
+    currentResults = response.results;
+    response.results.forEach((result, n) => {
+      const choice = document.createElement('button');
+      choice.className = 'choice';
+      choice.type = 'button';
 
-      const passage = document.createElement('div');
-      passage.className = 'passage';
-      passage.textContent = result.text;
+      const answer = document.createElement('div');
+      answer.className = 'answer-text';
+
+      const key = document.createElement('span');
+      key.className = 'key';
+      key.textContent = '[' + (n + 1) + '] ';
+      answer.appendChild(key);
+      answer.appendChild(document.createTextNode(result.answer));
 
       const metaRow = document.createElement('div');
       metaRow.className = 'meta-row';
@@ -5433,27 +5464,105 @@
 
       const metaText = document.createElement('span');
       metaText.className = 'meta-text';
-      metaText.textContent = result.manual + '  ·  ' + result.section + '  ·  p.' + result.page;
+      metaText.textContent = shortName(result.manual) + '  ·  ' + result.protocol +
+        '  ·  p.' + result.answer_page;
 
       metaRow.appendChild(score);
       metaRow.appendChild(metaText);
+      choice.appendChild(answer);
+      choice.appendChild(metaRow);
 
-      const link = pdfLink(result.manual, result.page);
+      choice.addEventListener('click', () => showProtocol(container, response, result));
+      container.appendChild(choice);
+    });
+  }
+
+  /* ---------------------------------------------- protocol view */
+
+  function showProtocol(container, response, result) {
+    const protocol = result.chunk;
+    container.innerHTML = '';
+    currentResults = [];
+
+    const back = document.createElement('button');
+    back.className = 'back-link';
+    back.type = 'button';
+    back.textContent = '← back to answers';
+    back.addEventListener('click', () => {
+      renderChoices(container, response);
+      queryInput.focus();
+    });
+    container.appendChild(back);
+
+    const title = document.createElement('div');
+    title.className = 'protocol-title';
+    title.textContent = protocol.protocol;
+    container.appendChild(title);
+
+    const pages = protocol.pages;
+    const span = pages.length > 1
+      ? 'pp.' + pages[0] + '–' + pages[pages.length - 1]
+      : 'p.' + pages[0];
+    const sub = document.createElement('div');
+    sub.className = 'protocol-sub';
+    sub.textContent = shortName(protocol.manual) + '  ·  ' + span +
+      '  ·  ' + protocol.passages.length +
+      (protocol.passages.length === 1 ? ' part' : ' parts');
+    container.appendChild(sub);
+
+    protocol.passages.forEach((passage, n) => {
+      const part = document.createElement('div');
+      part.className = 'part';
+
+      const head = document.createElement('div');
+      head.className = 'part-head';
+
+      const label = document.createElement('span');
+      label.className = 'part-label';
+      const which = protocol.passages.length > 1
+        ? 'part ' + (n + 1) + ' of ' + protocol.passages.length + '  ·  '
+        : '';
+      label.textContent = which + pageLabel(passage.page, passage.printed_page);
+      head.appendChild(label);
+
+      const heading = partTitle(passage.section, protocol.protocol);
+      if (heading) {
+        const sect = document.createElement('span');
+        sect.textContent = heading;
+        head.appendChild(sect);
+      }
+
+      if (passage.chunk_id === result.answer_chunk_id) {
+        const marker = document.createElement('span');
+        marker.className = 'from-answer';
+        marker.textContent = '◂ answer from here';
+        head.appendChild(marker);
+      }
+
+      const link = pdfLink(protocol.manual, passage.page);
       if (link) {
         const a = document.createElement('a');
         a.className = 'pdf-link';
         a.href = link;
         a.target = '_blank';
         a.rel = 'noopener';
-        a.textContent = 'OPEN PDF →';
-        metaRow.appendChild(a);
+        a.textContent = 'open pdf →';
+        head.appendChild(a);
       }
 
-      block.appendChild(passage);
-      block.appendChild(metaRow);
-      container.appendChild(block);
+      const text = document.createElement('div');
+      text.className = 'passage';
+      text.textContent = passage.text;
+
+      part.appendChild(head);
+      part.appendChild(text);
+      container.appendChild(part);
     });
+
+    scrollbackWrap.scrollTop = 0;
   }
+
+  /* ---------------------------------------------- asking */
 
   async function submitQuery(question) {
     if (!hasSearched) {
@@ -5461,6 +5570,10 @@
       content.classList.remove('pre-search');
       content.classList.add('post-search');
     }
+
+    // one question on screen at a time: a new question replaces the last
+    scrollback.innerHTML = '';
+    currentResults = [];
 
     const exchange = document.createElement('div');
     exchange.className = 'exchange';
@@ -5476,13 +5589,28 @@
     exchange.appendChild(queryLine);
     exchange.appendChild(resultContainer);
     scrollback.appendChild(exchange);
-    scrollToBottom();
+    scrollbackWrap.scrollTop = 0;
 
-    const response = await search(question);
+    try {
+      const response = await API.search(question);
+      resultContainer.className = '';
+      renderChoices(resultContainer, response);
+    } catch (err) {
+      resultContainer.className = 'refusal';
+      resultContainer.textContent = 'SEARCH UNAVAILABLE — IS THE SERVER RUNNING?';
+    }
+  }
 
-    resultContainer.className = '';
-    renderResult(resultContainer, response);
-    scrollToBottom();
+  function goHome() {
+    setView('search');
+    hasSearched = false;
+    currentResults = [];
+    content.classList.remove('post-search');
+    content.classList.add('pre-search');
+    scrollback.innerHTML = '';
+    queryInput.value = '';
+    echoText.textContent = '';
+    queryInput.focus();
   }
 
   queryInput.addEventListener('input', () => {
@@ -5490,6 +5618,15 @@
   });
 
   queryInput.addEventListener('keydown', (e) => {
+    // with the input empty, 1-3 open that answer, the way a terminal menu would
+    if (queryInput.value === '' && currentResults.length && /^[1-9]$/.test(e.key)) {
+      const choice = scrollback.querySelectorAll('.choice')[Number(e.key) - 1];
+      if (choice) {
+        e.preventDefault();
+        choice.click();
+        return;
+      }
+    }
     if (e.key === 'Enter') {
       const value = queryInput.value.trim();
       if (value === '') return;
@@ -5499,24 +5636,18 @@
     }
   });
 
-  chips.addEventListener('click', (e) => {
-    const chip = e.target.closest('.chip');
-    if (!chip) return;
-    submitQuery(chip.dataset.q);
-    queryInput.focus();
-  });
-
   homeBtn.addEventListener('click', goHome);
   tabSearch.addEventListener('click', () => setView('search'));
   tabMap.addEventListener('click', () => setView('map'));
 
-  scrollbackWrap.addEventListener('click', () => {
-    if (window.getSelection().toString() === '') {
+  scrollbackWrap.addEventListener('click', (e) => {
+    if (window.getSelection().toString() === '' && !e.target.closest('button, a')) {
       queryInput.focus();
     }
   });
 
   buildMap();
+  loadStats();
   queryInput.focus();
 </script>
 

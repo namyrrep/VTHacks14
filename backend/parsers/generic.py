@@ -54,5 +54,7 @@ def parse(pdf_path, manual: str | None = None, prefix: str | None = None) -> lis
                 text=piece["text"],
                 keywords=[title_case(title)] + ([title_case(sub)] if sub else []),
                 kind="reference",
+                protocol_id=f"{prefix}_{slug(title, 30)}",
+                protocol=title_case(title),
             ))
     return chunks

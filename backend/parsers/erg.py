@@ -166,6 +166,8 @@ def parse_guides(doc, index) -> list[dict]:
                 text=f"GUIDE {num} – {title}\n{heading}\n{text}",
                 keywords=guide_keywords(num, title, index) + [part],
                 kind="guide",
+                protocol_id=f"{PREFIX}_guide{num}",
+                protocol=f"Guide {num} – {title}",
             ))
     return chunks
 
@@ -310,6 +312,8 @@ def table1_row_chunks(doc, pno, row) -> list[dict]:
         text=text,
         keywords=kws,
         kind="table1",
+        protocol_id=f"{PREFIX}_t1_{un}",
+        protocol=f"Table 1 – Initial Isolation and Protective Action Distances – UN{un}",
     )]
 
 
@@ -414,6 +418,8 @@ def parse_table2(doc) -> list[dict]:
         text="\n".join(legend),
         keywords=["Table 2", "water-reactive", "TIH", "toxic gas", "spilled in water"],
         kind="table2",
+        protocol_id=f"{PREFIX}_t2",
+        protocol=T2_TITLE,
     )]
     for start in range(0, len(entries), T2_ROWS_PER_CHUNK):
         group = entries[start:start + T2_ROWS_PER_CHUNK]
@@ -430,6 +436,8 @@ def parse_table2(doc) -> list[dict]:
             text="Use this list only when material is spilled in water.\n" + T2_HEADER + "\n" + "\n".join(rows),
             keywords=kws,
             kind="table2",
+            protocol_id=f"{PREFIX}_t2",
+            protocol=T2_TITLE,
         ))
     return chunks
 
@@ -437,6 +445,7 @@ def parse_table2(doc) -> list[dict]:
 # The BLEVE propane-tank table (page 361) is printed sideways: each tank size is a column of
 # values that reads bottom-to-top in this fixed order. (property, printed units, values per cell)
 BLEVE_PAGE = 361
+BLEVE_SECTION = "BLEVE - Safety Precautions"
 BLEVE_PROPERTIES = [
     ("Capacity", "Litres (Gallons)", 2),
     ("Diameter", "Meters (Feet)", 2),
@@ -505,6 +514,8 @@ def parse_bleve_table(doc) -> list[dict]:
                       "time to failure", "cooling water", "boiling liquid expanding vapor explosion"]
                      + [f"{cap} litres" for cap, _ in group],
             kind="table_bleve",
+            protocol_id=f"{PREFIX}_ref_{slug(BLEVE_SECTION, 30)}",
+            protocol=BLEVE_SECTION,
         ))
     return chunks
 
@@ -542,6 +553,8 @@ def parse_reference(doc) -> list[dict]:
                 text=piece["text"],
                 keywords=[title] + ([title_case(sub)] if sub else []),
                 kind="reference",
+                protocol_id=f"{PREFIX}_ref_{slug(title, 30)}",
+                protocol=title,
             ))
     return chunks
 
