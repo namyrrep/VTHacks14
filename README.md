@@ -29,7 +29,7 @@ It also never generates text. Every answer is the manual's own wording, shown wi
 | --- | --- |
 | ERG 2024 (PHMSA) | Hazmat and transport incidents |
 | NIOSH Pocket Guide to Chemical Hazards | Chemical exposure, symptoms, first aid |
-| Virginia OEMS Patient Care Protocols | Emergency medical |
+| West Virginia First Responder Guide | Emergency medical |
 
 ## Implementation
 
