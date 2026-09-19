@@ -1,0 +1,8 @@
+{
+ "model": "sentence-transformers/all-MiniLM-L6-v2",
+ "dim": 384,
+ "chunks": 1825,
+ "chunk_ids_sha256": "cf377ce412ab2cceea0df11b7043e30518b9b1dfd3b92ea5313db2011f609c16",
+ "window_words": 150,
+ "stride_words": 100
+}
