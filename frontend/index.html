@@ -1,0 +1,627 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>BLACKOUT</title>
+<style>
+  :root {
+    --bg: #0B0D0E;
+    --fg: #ECEAE3;
+    --dim: rgba(236, 234, 227, 0.55);
+    --hairline: rgba(236, 234, 227, 0.20);
+    --accent: #5FD0E6;
+    --lh: 24px;
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    height: 100%;
+    background: var(--bg);
+    color: var(--fg);
+  }
+
+  body {
+    display: flex;
+    flex-direction: column;
+    font-family: ui-monospace, "SF Mono", "Cascadia Mono", Menlo, Consolas, monospace;
+    font-size: 15px;
+    line-height: var(--lh);
+    overflow-x: hidden;
+  }
+
+  a {
+    color: var(--accent);
+  }
+
+  /* ---------- status bar ---------- */
+
+  #status-bar {
+    flex: 0 0 auto;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: 8px 24px;
+    padding: 24px;
+    border-bottom: 1px solid var(--hairline);
+    background: var(--bg);
+  }
+
+  #status-bar .brand {
+    font: inherit;
+    font-weight: 700;
+    letter-spacing: 0.08em;
+    color: var(--fg);
+    background: none;
+    border: 0;
+    padding: 0;
+    cursor: pointer;
+  }
+
+  #status-bar .brand:hover,
+  #status-bar .brand:focus {
+    color: var(--accent);
+    outline: none;
+  }
+
+  #status-bar .fields {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    color: var(--dim);
+  }
+
+  #status-bar .fields span:not(:last-child)::after {
+    content: " \00B7";
+    margin-left: 8px;
+    color: var(--dim);
+  }
+
+  /* ---------- content area ---------- */
+
+  #content {
+    flex: 1 1 auto;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  #content.pre-search {
+    justify-content: center;
+  }
+
+  /* ---------- launch (search box + chips) ---------- */
+
+  #launch {
+    padding: 24px;
+  }
+
+  #content.pre-search #launch {
+    max-width: 70ch;
+    width: 100%;
+    margin: 0 auto;
+  }
+
+  #content.post-search #launch {
+    border-bottom: 1px solid var(--hairline);
+  }
+
+  .hero-label {
+    color: var(--dim);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+    margin-bottom: 8px;
+  }
+
+  #content.post-search .hero-label,
+  #content.post-search #chips {
+    display: none;
+  }
+
+  #search-box {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border: 1px solid var(--hairline);
+    padding: 12px 16px;
+  }
+
+  #search-box .chevron {
+    color: var(--dim);
+  }
+
+  #chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    margin-top: 24px;
+  }
+
+  .chip {
+    font: inherit;
+    color: var(--dim);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    padding: 8px 12px;
+    cursor: pointer;
+    text-align: left;
+  }
+
+  .chip:hover, .chip:focus {
+    color: var(--fg);
+    border-color: var(--accent);
+    outline: none;
+  }
+
+  /* ---------- input / cursor ---------- */
+
+  .input-wrap {
+    position: relative;
+    flex: 1 1 auto;
+    height: var(--lh);
+    min-width: 0;
+  }
+
+  .echo-line {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    white-space: pre;
+    overflow: hidden;
+  }
+
+  .echo-text {
+    white-space: pre;
+  }
+
+  .cursor {
+    display: inline-block;
+    width: 0.6em;
+    height: 1.1em;
+    margin-left: 1px;
+    background: var(--accent);
+    animation: blink 1s steps(1, jump-none) infinite;
+    flex: 0 0 auto;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .cursor {
+      animation: none;
+    }
+  }
+
+  @keyframes blink {
+    0%, 49% { opacity: 1; }
+    50%, 100% { opacity: 0; }
+  }
+
+  #query-input {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    border: 0;
+    margin: 0;
+    padding: 0;
+    background: transparent;
+    color: transparent;
+    caret-color: transparent;
+    font: inherit;
+    outline: none;
+  }
+
+  /* ---------- scrollback ---------- */
+
+  #scrollback-wrap {
+    flex: 1 1 auto;
+    overflow-y: auto;
+    overflow-x: hidden;
+  }
+
+  #content.pre-search #scrollback-wrap {
+    display: none;
+  }
+
+  #scrollback {
+    max-width: 80ch;
+    padding: 24px;
+  }
+
+  .exchange {
+    padding-top: 24px;
+    padding-bottom: 24px;
+  }
+
+  .exchange:not(:first-child) {
+    border-top: 1px solid var(--hairline);
+  }
+
+  .exchange:first-child {
+    padding-top: 0;
+  }
+
+  .query-line {
+    color: var(--fg);
+    margin-bottom: 24px;
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  .query-line::before {
+    content: "> ";
+    color: var(--dim);
+  }
+
+  .result-loading {
+    color: var(--dim);
+  }
+
+  .result-block + .result-block {
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 1px solid var(--hairline);
+  }
+
+  .passage {
+    white-space: pre-wrap;
+    overflow-wrap: break-word;
+  }
+
+  .meta-row {
+    margin-top: 8px;
+    display: flex;
+    flex-wrap: wrap;
+    align-items: baseline;
+    gap: 8px;
+    font-size: 13px;
+  }
+
+  .score-badge {
+    color: var(--fg);
+    border: 1px solid var(--hairline);
+    padding: 1px 6px;
+  }
+
+  .meta-text {
+    color: var(--dim);
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    overflow-wrap: break-word;
+  }
+
+  .pdf-link {
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    text-decoration: none;
+    white-space: nowrap;
+  }
+
+  .pdf-link:hover, .pdf-link:focus {
+    text-decoration: underline;
+  }
+
+  .refusal {
+    color: var(--accent);
+    font-weight: 700;
+    letter-spacing: 0.02em;
+  }
+
+  .refusal-meta {
+    margin-top: 8px;
+    color: var(--dim);
+    font-size: 13px;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+  }
+
+  @media (max-width: 900px) {
+    #status-bar, #launch, #scrollback {
+      padding-left: 16px;
+      padding-right: 16px;
+    }
+  }
+</style>
+</head>
+<body>
+
+  <div id="status-bar">
+    <button class="brand" type="button" id="home-btn" aria-label="Return to search home">BLACKOUT</button>
+    <div class="fields">
+      <span>OFFLINE</span>
+      <span>3 MANUALS</span>
+      <span>412 SECTIONS</span>
+      <span>0 NETWORK CALLS</span>
+    </div>
+  </div>
+
+  <div id="content" class="pre-search">
+    <div id="launch">
+      <div class="hero-label">Ask a protocol question</div>
+      <div id="search-box">
+        <span class="chevron">&gt;</span>
+        <div class="input-wrap">
+          <div class="echo-line">
+            <span class="echo-text" id="echo-text"></span><span class="cursor"></span>
+          </div>
+          <input id="query-input" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Query input" autofocus>
+        </div>
+      </div>
+      <div id="chips">
+        <button class="chip" type="button" data-q="placard requirements for a mixed load of unidentified corrosive cargo">placard for unidentified corrosive cargo</button>
+        <button class="chip" type="button" data-q="minimum oxygen level for confined space entry">confined space entry O2 minimum</button>
+        <button class="chip" type="button" data-q="aspirin dose for suspected cardiac chest pain">chest pain aspirin dose</button>
+      </div>
+    </div>
+
+    <div id="scrollback-wrap">
+      <div id="scrollback"></div>
+    </div>
+  </div>
+
+<script>
+  /* ============================================================
+     BACKEND INTEGRATION POINT
+
+     Everything else in this file only ever touches the return
+     shape below. Replace the body of search() with a fetch call
+     and nothing else needs to change.
+
+     async function search(question) {
+       // returns:
+       // {
+       //   confident: boolean,
+       //   top_score: number,       // 0.0-1.0
+       //   results: [{
+       //     text: string,          // passage, verbatim from the manual
+       //     manual: string,        // "ERG 2024"
+       //     section: string,       // "Guide 111 - Mixed Load/Unidentified Cargo"
+       //     page: number,          // 172
+       //     score: number          // 0.0-1.0
+       //   }]
+       // }
+     }
+     ============================================================ */
+
+  function sleep(ms) {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function search(question) {
+    await sleep(150);
+
+    // TODO: replace everything below with:
+    //   const res = await fetch('/api/search', {
+    //     method: 'POST',
+    //     headers: { 'Content-Type': 'application/json' },
+    //     body: JSON.stringify({ question, k: 3 })
+    //   });
+    //   return await res.json();
+
+    const q = question.toLowerCase();
+
+    if (q.includes('placard') || q.includes('corrosive') || q.includes('hazmat') || q.includes('flammable')) {
+      return {
+        confident: true,
+        top_score: 0.81,
+        results: [
+          {
+            text: "If a placard cannot be identified from a safe distance, treat the load as an unidentified hazard. Isolate the area and deny entry until qualified personnel confirm the material. For fires involving mixed or unidentified cargo, use an extinguishing agent suited to the surrounding fire; do not use straight hose streams on the load itself.",
+            manual: "ERG 2024",
+            section: "Guide 111 - Mixed Load/Unidentified Cargo",
+            page: 172,
+            score: 0.81
+          },
+          {
+            text: "Initial isolation distance for unidentified spilled or leaking material should not be less than 50 meters (150 feet) in all directions. Increase distance if runoff is entering waterways or if vapor is visible.",
+            manual: "ERG 2024",
+            section: "Table 1 - Initial Isolation and Protective Action Distances",
+            page: 289,
+            score: 0.68
+          }
+        ]
+      };
+    }
+
+    if (q.includes('confined space') || q.includes('lockout') || q.includes('atmosphere')) {
+      return {
+        confident: true,
+        top_score: 0.77,
+        results: [{
+          text: "Before entry into a permit-required confined space, test the atmosphere for oxygen content, flammability, and toxicity, in that order. Do not permit entry below 19.5% or above 23.5% oxygen without supplied-air respiratory protection. A trained attendant must remain outside the space for the full duration of entry.",
+          manual: "NIOSH Pocket Guide",
+          section: "Confined Space Entry",
+          page: 42,
+          score: 0.77
+        }]
+      };
+    }
+
+    if (q.includes('chest pain') || q.includes('cardiac') || q.includes('stemi')) {
+      return {
+        confident: true,
+        top_score: 0.74,
+        results: [{
+          text: "Administer aspirin 324 mg chewed if not already taken and no contraindication exists. Obtain a 12-lead ECG within 10 minutes of patient contact and transmit to the receiving facility if STEMI criteria are met. Do not delay transport to establish IV access.",
+          manual: "Statewide EMS Protocols",
+          section: "Cardiac - Chest Pain / STEMI",
+          page: 58,
+          score: 0.74
+        }]
+      };
+    }
+
+    return {
+      confident: false,
+      top_score: question.trim() ? 0.31 : 0.0,
+      results: []
+    };
+  }
+
+  /* ============================================================
+     rendering — everything below assumes only the shape above
+     ============================================================ */
+
+  // Client-side only: maps a manual name to its local PDF file so a
+  // result can deep-link to the exact page. Not part of the search()
+  // contract — the backend never needs to know these paths exist.
+  const MANUAL_FILES = {
+    'ERG 2024': 'manuals/erg-2024.pdf',
+    'NIOSH Pocket Guide': 'manuals/niosh-pocket-guide.pdf',
+    'Statewide EMS Protocols': 'manuals/statewide-ems-protocols.pdf'
+  };
+
+  function pdfLink(manual, page) {
+    const file = MANUAL_FILES[manual];
+    return file ? file + '#page=' + page : null;
+  }
+
+  const content = document.getElementById('content');
+  const scrollback = document.getElementById('scrollback');
+  const scrollbackWrap = document.getElementById('scrollback-wrap');
+  const queryInput = document.getElementById('query-input');
+  const echoText = document.getElementById('echo-text');
+  const chips = document.getElementById('chips');
+  const homeBtn = document.getElementById('home-btn');
+
+  let hasSearched = false;
+
+  function goHome() {
+    hasSearched = false;
+    content.classList.remove('post-search');
+    content.classList.add('pre-search');
+    scrollback.innerHTML = '';
+    queryInput.value = '';
+    echoText.textContent = '';
+    queryInput.focus();
+  }
+
+  function scrollToBottom() {
+    scrollbackWrap.scrollTop = scrollbackWrap.scrollHeight;
+  }
+
+  function renderResult(container, response) {
+    container.innerHTML = '';
+
+    if (!response.confident || !response.results || response.results.length === 0) {
+      const refusal = document.createElement('div');
+      refusal.className = 'refusal';
+      refusal.textContent = 'NOT COVERED IN LOADED PROTOCOLS';
+
+      const meta = document.createElement('div');
+      meta.className = 'refusal-meta';
+      meta.textContent = 'TOP SCORE ' + response.top_score.toFixed(2);
+
+      container.appendChild(refusal);
+      container.appendChild(meta);
+      return;
+    }
+
+    response.results.forEach(result => {
+      const block = document.createElement('div');
+      block.className = 'result-block';
+
+      const passage = document.createElement('div');
+      passage.className = 'passage';
+      passage.textContent = result.text;
+
+      const metaRow = document.createElement('div');
+      metaRow.className = 'meta-row';
+
+      const score = document.createElement('span');
+      score.className = 'score-badge';
+      score.textContent = result.score.toFixed(2);
+
+      const metaText = document.createElement('span');
+      metaText.className = 'meta-text';
+      metaText.textContent = result.manual + '  ·  ' + result.section + '  ·  p.' + result.page;
+
+      metaRow.appendChild(score);
+      metaRow.appendChild(metaText);
+
+      const link = pdfLink(result.manual, result.page);
+      if (link) {
+        const a = document.createElement('a');
+        a.className = 'pdf-link';
+        a.href = link;
+        a.target = '_blank';
+        a.rel = 'noopener';
+        a.textContent = 'OPEN PDF →';
+        metaRow.appendChild(a);
+      }
+
+      block.appendChild(passage);
+      block.appendChild(metaRow);
+      container.appendChild(block);
+    });
+  }
+
+  async function submitQuery(question) {
+    if (!hasSearched) {
+      hasSearched = true;
+      content.classList.remove('pre-search');
+      content.classList.add('post-search');
+    }
+
+    const exchange = document.createElement('div');
+    exchange.className = 'exchange';
+
+    const queryLine = document.createElement('div');
+    queryLine.className = 'query-line';
+    queryLine.textContent = question;
+
+    const resultContainer = document.createElement('div');
+    resultContainer.className = 'result-loading';
+    resultContainer.textContent = 'SEARCHING PROTOCOLS';
+
+    exchange.appendChild(queryLine);
+    exchange.appendChild(resultContainer);
+    scrollback.appendChild(exchange);
+    scrollToBottom();
+
+    const response = await search(question);
+
+    resultContainer.className = '';
+    renderResult(resultContainer, response);
+    scrollToBottom();
+  }
+
+  queryInput.addEventListener('input', () => {
+    echoText.textContent = queryInput.value;
+  });
+
+  queryInput.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      const value = queryInput.value.trim();
+      if (value === '') return;
+      queryInput.value = '';
+      echoText.textContent = '';
+      submitQuery(value);
+    }
+  });
+
+  chips.addEventListener('click', (e) => {
+    const chip = e.target.closest('.chip');
+    if (!chip) return;
+    submitQuery(chip.dataset.q);
+    queryInput.focus();
+  });
+
+  homeBtn.addEventListener('click', goHome);
+
+  scrollbackWrap.addEventListener('click', () => {
+    if (window.getSelection().toString() === '') {
+      queryInput.focus();
+    }
+  });
+
+  queryInput.focus();
+</script>
+
+</body>
+</html>
