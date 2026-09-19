@@ -238,5 +238,7 @@ def parse(pdf_path) -> list[dict]:
                 text=piece["text"],
                 keywords=base + ([sub] if sub else []),
                 kind=unit["kind"],
+                protocol_id=f"{PREFIX}_{slug(unit['key'], 30)}",
+                protocol=section,
             ))
     return chunks

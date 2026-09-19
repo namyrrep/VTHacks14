@@ -196,7 +196,11 @@ def title_case(heading: str) -> str:
     return heading
 
 
-def make_chunk(cid, manual, section, page, printed_page, text, keywords, kind):
+def make_chunk(cid, manual, section, page, printed_page, text, keywords, kind,
+               protocol_id=None, protocol=None):
+    """protocol_id / protocol name the whole unit a chunk belongs to (one WV protocol, one
+    ERG guide, one NIOSH chemical, ...). A unit split over several chunks shares one
+    protocol_id, so search can hand back every part of it. Defaults to the chunk itself."""
     text = "\n".join(WS_RE.sub(" ", ln).strip() for ln in text.split("\n") if ln.strip())
     seen, kws = set(), []
     for k in keywords:
@@ -213,6 +217,8 @@ def make_chunk(cid, manual, section, page, printed_page, text, keywords, kind):
         "kind": kind,
         "text": text,
         "keywords": kws,
+        "protocol_id": protocol_id or cid,
+        "protocol": protocol or section,
     }
 
 

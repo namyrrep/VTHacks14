@@ -10,34 +10,35 @@ No generative model sits in the answer path. The backend only returns verbatim p
 Documents/*.pdf
    │  ingest.py   PDF → one chunk per protocol / chemical / table row (run once)
    ▼
-data/chunks.json  [{id, manual, section, page, printed_page, kind, text, keywords, also_at}, ...]
+data/chunks.json  [{id, manual, section, page, printed_page, kind, text, keywords, also_at, protocol_id, protocol}, ...]
    │  index.py    embed every chunk (run once)
    ▼
 data/index.npy    one normalized embedding per chunk, same order as chunks.json
    │
    ▼
-search.py         question → embed → cosine similarity → top k → threshold check   (not built yet)
+search.py         question → embed → score chunks → pool by protocol → top 3 → threshold → one-line answer each
 ```
 
 ## Files
 
 | File | Purpose |
 |---|---|
-| `ingest.py` | Runs each manual's parser, merges passages printed twice, numbers multi-part sections, checks integrity, writes `data/chunks.json`. Fails if any chunk ID, passage, or section label is duplicated. |
+| `ingest.py` | Runs each manual's parser, merges passages printed twice, repairs fragment section labels, splits oversized reference sections into subsection protocols, numbers multi-part sections, checks integrity, writes `data/chunks.json`. Fails if any chunk ID, passage, section label, or protocol name is duplicated. |
 | `parsers/erg.py` | ERG 2024: orange guides, Tables 1–3, BLEVE table, reference sections |
 | `parsers/niosh.py` | NIOSH Pocket Guide: 677 chemical records, code tables 1–6, appendices A–F |
 | `parsers/wv.py` | West Virginia EMS Protocols: 88 protocols, 41 medications, appendices |
 | `parsers/generic.py` | Fallback for any other PDF dropped into `Documents/` (splits on bookmarks and headings) |
 | `parsers/common.py` | Shared line extraction, paragraph reflow, chunk packing |
 | `index.py` | Embeds every chunk with `all-MiniLM-L6-v2`, writes `data/index.npy` and `data/index_meta.json` |
-| `search.py` | Loads the data files and implements `search()` (**not built yet**) |
+| `search.py` | Loads the data files and implements `search()` and `get_protocol()`. Refuses to run on a stale index. |
+| `eval_search.py` | Checks corpus consistency/uniqueness and every `search()` invariant against 45 test questions, and reports the threshold margin. Exits non-zero on any problem. |
 | `data/chunks.json` | Generated, **committed** so a fresh clone runs with no build step |
 | `data/index.npy` | Generated, **committed** for the same reason |
-| `data/index_meta.json` | Model name, vector size, and a hash of the chunk IDs, so `search.py` can detect a stale index |
+| `data/index_meta.json` | Model name, vector size, and a hash of everything embedded (IDs, sections, text, keywords), so `search.py` can detect a stale index |
 
 ## Manuals loaded
 
-1,825 chunks in total.
+1,825 chunks in 1,280 protocols.
 
 | Manual | Source PDF | Chunks | What one chunk is |
 |---|---|---|---|
@@ -48,6 +49,8 @@ search.py         question → embed → cosine similarity → top k → thresho
 ## Chunking rules
 
 - **One chunk per protocol, capped at about 180 words.** A longer protocol is split only at a heading or paragraph boundary, and each part carries the protocol's section name. NIOSH chemical records and ERG guide parts stay whole even when longer. `index.py` embeds long chunks as overlapping windows and averages them, so each chunk is still one row in `index.npy`.
+- **One protocol per unit:** every chunk carries `protocol_id` and `protocol`. All chunks of one WV protocol, one ERG guide (its three printed parts), one Table 1 ID number, one NIOSH chemical, or one reference subsection share a `protocol_id`. Search matches chunks but answers with whole protocols. Reference sections longer than 600 words (the ERG glossary, NIOSH Appendix E, ...) are split into their subsections; Table 2 and the BLEVE table (with its safety precautions) are one protocol each.
+- **Clean labels:** a stray bold line picked up as a subsection ("Refer to GUIDE 152.", "dying people or animals", "Class 1 -") is replaced by the heading the passage is actually printed under.
 - **Unique:** `ingest.py` rejects duplicate IDs, passages, or section labels. A passage the manual prints twice (e.g. the ERG yellow and blue section introductions) is kept once, and the second location goes in `also_at`.
 - **Consistent:** every chunk has every field, and repeated runs produce a byte-identical `chunks.json`.
 
@@ -72,28 +75,46 @@ To add a manual, drop the PDF into `Documents/` and rerun both scripts. It goes 
 
 ## The contract
 
-Agreed with the UI side. Do not change the shape without telling the other person.
+Agreed with the UI side. Do not change the shape without telling the other person. The fields after `score` were added with the search implementation; the original five are unchanged.
 
 ```python
 def search(question: str, k: int = 3) -> dict:
     """
     {
       "confident": bool,       # False -> UI shows the refusal state
-      "top_score": float,      # 0.0-1.0
-      "results": [
+      "top_score": float,      # 0.0-1.0, score of the best protocol
+      "results": [             # at most k, one per protocol, each scoring >= THRESHOLD
         {
-          "text": str,         # passage, VERBATIM from the manual
-          "manual": str,       # "NIOSH Pocket Guide"
-          "section": str,      # "Hydrogen Sulfide"
-          "page": int,         # 172
-          "score": float       # 0.0-1.0
+          "text": str,         # best-matching passage, VERBATIM from the manual
+          "manual": str,       # "NIOSH Pocket Guide to Chemical Hazards"
+          "section": str,      # "Hydrogen sulfide"
+          "page": int,         # 200 (PDF page of that passage)
+          "score": float,      # 0.0-1.0
+          "answer": str,       # ONE line of the protocol answering the question, verbatim
+          "answer_page": int,  # PDF page that line is on
+          "chunk_id": str,     # id of the passage in data/chunks.json
+          "protocol_id": str,  # "wv_t008"; pass to get_protocol()
+          "protocol": str,     # "T008 – Burns"
+          "chunk": {           # the whole protocol: every part, in reading order
+            "protocol_id", "protocol", "manual", "kind",
+            "page", "pages", "printed_pages", "parts": [chunk ids], "text"
+          }
         }, ...
       ]
     }
     """
+
+def get_protocol(protocol_id: str) -> dict | None:  # same shape as "chunk" above
 ```
 
-When `confident` is `False`, `results` is empty.
+When `confident` is `False`, `results` is empty. Results below the threshold are dropped even when the top one is confident, so there can be fewer than 3.
+
+### How a result is scored
+
+1. **Chunks.** Cosine similarity between the question and each chunk's embedding. Before embedding, bystander wording gets the manuals' clinical terms appended ("passed out" → unconscious, "choking" → airway obstruction; `LAY_TERMS`).
+2. **Keywords.** +0.12 when the question names an identifying keyword of the chunk (a chemical, drug, or protocol name; a keyword shared by more than 8 protocols, like "dose", doesn't count). +0.2 for an exact UN number, CAS number, or protocol code, with a floor of 0.6, so "7783-06-4" or "T008" alone is answered. A bare 4-digit number gets only the +0.12 (it's more often a year than a UN number).
+3. **Protocols.** A protocol scores as its best chunk, plus up to +0.08 for the share of the question's topic words (the words that aren't the protocol's own name) found in that chunk. The top 3 distinct protocols are kept.
+4. **Answer line.** From the protocol's lines (headings, banners, and name-only lines excluded), pick the line that best matches the question semantically, plus a bonus for containing its topic words. A question that only names the protocol ("snake bite", "T008") gets the line most representative of the protocol as a whole. Lines longer than 240 characters are cut at a word boundary and end in "…".
 
 ### Chunk shape
 
@@ -117,15 +138,18 @@ When `confident` is `False`, `results` is empty.
 | `printed_page` | The page label printed on the paper copy (`"178"`, `"xxviii"`). Empty for the WV protocols, which print no page numbers. |
 | `kind` | `guide`, `table1`, `table2`, `table3`, `table_bleve`, `chemical`, `protocol`, `medication`, or `reference` |
 | `text` | The passage, **verbatim**. The only reshaping: wrapped lines are rejoined, and table cells are laid out as labeled lines using the table's own column headers. |
-| `keywords` | Exact-match terms: UN numbers, CAS numbers, synonyms, protocol codes. Meant for BM25 or an exact-match boost. |
+| `keywords` | Exact-match terms: UN numbers, CAS numbers, synonyms, protocol codes. Used for the exact-match boost. |
 | `also_at` | Other places the same passage is printed, as a list of `{section, page, printed_page}` |
+| `protocol_id` | The protocol this chunk is part of (`wv_t008`, `erg_guide124`, `erg_t1_1017`, `niosh_hydrogen_sulfide`). Shared by every part of the protocol. |
+| `protocol` | The protocol's name (`T008 – Burns`, `Guide 124 – Gases - Toxic and/or Corrosive - Oxidizing`). Unique within a manual. |
 
 ## Confidence threshold
 
-`search()` sets `confident = top_score >= THRESHOLD`. Tune the value against a test set of about 10 questions: 5 that the manuals cover and 5 that they don't (for example, "what's the wifi password"). Pick the value that refuses every out-of-corpus question and still answers every in-corpus one.
+`search()` sets `confident = top_score >= THRESHOLD`. `eval_search.py` holds the test set and prints the lowest in-corpus and highest out-of-corpus top score.
 
-- Current threshold: `[TBD]`
-- Tuned against: `[N]` questions
+- Current threshold: **0.45** (`THRESHOLD` in `search.py`)
+- Tuned against: 45 questions. 29 are covered by the manuals (clinical wording, bystander wording, bare identifiers), and all score ≥ 0.508 with an expected protocol in the top 3. 16 are not covered (off-topic, near-domain like "dog bite rabies shots" or "covid vaccine schedule", a year that is also a UN number), and all score ≤ 0.388. The midpoint is 0.448.
+- Known limits: idioms can trip the bystander wording ("this movie is choking me up" scores 0.49 → R001 Airway Management). Casual phrasings with no `LAY_TERMS` entry can land between 0.35 and 0.45 and be refused. Add a `LAY_TERMS` entry, add the question to `eval_search.py`, and rerun it.
 
 ## Fallback: BM25
 
@@ -134,7 +158,8 @@ If `sentence-transformers` won't install or the model won't download, switch `se
 ## Quick test
 
 ```bash
-python -c "from search import search; import json; print(json.dumps(search('hydrogen sulfide exposure'), indent=2))"
+python search.py hydrogen sulfide exposure   # prints the result, without the full protocol text
+python eval_search.py                          # all checks; must end with "0 problem(s)"
 ```
 
 Turn on airplane mode and run it again. It should return the same output.

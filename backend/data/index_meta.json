@@ -2,7 +2,7 @@
  "model": "sentence-transformers/all-MiniLM-L6-v2",
  "dim": 384,
  "chunks": 1825,
- "chunk_ids_sha256": "cf377ce412ab2cceea0df11b7043e30518b9b1dfd3b92ea5313db2011f609c16",
+ "chunks_sha256": "d55204c8a2d1670bb322cda6037011e7431c2f5308cae753d51e20cecadff2bf",
  "window_words": 150,
  "stride_words": 100
 }
