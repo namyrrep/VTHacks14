@@ -266,6 +266,10 @@ class _Engine:
                 text = text.split("\n", 1)[1]
             texts.append(text)
         pages = sorted({c["page"] for c in parts})
+        # one entry per part, so the UI can cite each passage to its own page
+        passages = [{"chunk_id": c["id"], "section": c["section"], "page": c["page"],
+                     "printed_page": c["printed_page"], "text": t}
+                    for c, t in zip(parts, texts)]
         return {
             "protocol_id": pid,
             "protocol": parts[0]["protocol"],
@@ -275,6 +279,7 @@ class _Engine:
             "pages": pages,
             "printed_pages": list(dict.fromkeys(c["printed_page"] for c in parts if c["printed_page"])),
             "parts": [c["id"] for c in parts],
+            "passages": passages,
             "text": "\n".join(texts),
         }
 
@@ -302,7 +307,10 @@ class _Engine:
                 for s in pieces:
                     s = s.strip()
                     words = _content_words(s)
+                    # a line ending in ":" introduces what follows ("Common chemicals that
+                    # cause burns:"); it names a topic instead of answering anything
                     heading = (s.isupper() and len(s.split()) < 8 or BANNER_RE.match(s)
+                               or s.endswith(":")
                                or any(_norm(s) in label for label in labels))
                     name_only = words and len(words & identity) / len(words) >= ANSWER_MAX_IDENTITY
                     if len(s.split()) < ANSWER_MIN_WORDS or heading or name_only or s in seen:
@@ -389,6 +397,7 @@ class _Engine:
                 "score": round(score, 4),
                 "answer": answer,
                 "answer_page": self.chunks[answer_chunk]["page"],
+                "answer_chunk_id": self.chunks[answer_chunk]["id"],
                 "chunk_id": c["id"],
                 "protocol_id": pid,
                 "protocol": c["protocol"],
@@ -416,6 +425,7 @@ def search(question: str, k: int = TOP_K) -> dict:
           "score": float,      # 0.0-1.0
           "answer": str,       # one line of the protocol answering the question, verbatim
           "answer_page": int,  # PDF page that line is on
+          "answer_chunk_id": str,  # id of the part that line came from
           "chunk_id": str,     # id of the passage in data/chunks.json
           "protocol_id": str,  # id of the whole protocol; get_protocol(protocol_id)
           "protocol": str,     # "T008 – Burns"
@@ -430,7 +440,11 @@ def search(question: str, k: int = TOP_K) -> dict:
 def get_protocol(protocol_id: str) -> dict | None:
     """Every part of one protocol, in reading order:
     {"protocol_id", "protocol", "manual", "kind", "page", "pages", "printed_pages",
-     "parts": [chunk ids], "text": full protocol text}"""
+     "parts": [chunk ids], "text": full protocol text,
+     "passages": [{"chunk_id", "section", "page", "printed_page", "text"}]}
+
+    `passages` is the same text as `text`, split back into its parts so each can be cited
+    to the page it is printed on."""
     engine = _engine()
     return engine.protocol(protocol_id) if protocol_id in engine.protocols else None
 

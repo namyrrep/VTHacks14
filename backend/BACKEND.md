@@ -1,6 +1,6 @@
 # BLACKOUT — Backend (Search Pipeline)
 
-The backend turns protocol manual PDFs into a local search index and exposes one function, `search()`, that the Streamlit UI calls. Once the index files exist, **nothing in the backend touches the network.**
+The backend turns protocol manual PDFs into a local search index, exposes `search()`, and serves that plus the UI over a local HTTP server (`server.py`). Once the index files exist, **nothing in the backend touches the network.**
 
 No generative model sits in the answer path. The backend only returns verbatim passages from the manuals, with citations, and abstains when confidence is low.
 
@@ -17,6 +17,9 @@ data/index.npy    one normalized embedding per chunk, same order as chunks.json
    │
    ▼
 search.py         question → embed → score chunks → pool by protocol → top 3 → threshold → one-line answer each
+   │
+   ▼
+server.py         localhost HTTP: the page, /api/search, /api/protocol, /manuals/*.pdf
 ```
 
 ## Files
@@ -31,6 +34,7 @@ search.py         question → embed → score chunks → pool by protocol → t
 | `parsers/common.py` | Shared line extraction, paragraph reflow, chunk packing |
 | `index.py` | Embeds every chunk with `all-MiniLM-L6-v2`, writes `data/index.npy` and `data/index_meta.json` |
 | `search.py` | Loads the data files and implements `search()` and `get_protocol()`. Refuses to run on a stale index. |
+| `server.py` | Standard-library HTTP server for the UI. No dependency beyond what search already needs, and it binds to localhost only. |
 | `eval_search.py` | Checks corpus consistency/uniqueness and every `search()` invariant against 45 test questions, and reports the threshold margin. Exits non-zero on any problem. |
 | `data/chunks.json` | Generated, **committed** so a fresh clone runs with no build step |
 | `data/index.npy` | Generated, **committed** for the same reason |
@@ -73,6 +77,25 @@ python index.py    # about 1 minute on CPU; no network once the model is cached
 
 To add a manual, drop the PDF into `Documents/` and rerun both scripts. It goes through `parsers/generic.py` unless you add a dedicated parser to `MANUALS` in `ingest.py`.
 
+## Serving the UI
+
+```bash
+python server.py                                  # http://127.0.0.1:8000, opens a browser
+python server.py --port 9000 --no-browser
+```
+
+The index and the model load before the first request, so no question waits on them.
+
+| Route | Returns |
+|---|---|
+| `GET /` | `frontend/index.html`, and any other file beside it |
+| `GET /api/stats` | `{manuals: [{manual, short, pdf, chunks, protocols}], chunks, protocols, threshold, model}` — the status bar's counts, and the short manual labels (Hazmat / Chemical / Medical) the UI cites |
+| `POST /api/search` | `{"question": str, "k": int}` → `search()` |
+| `GET /api/protocol?id=` | `get_protocol()` |
+| `GET /manuals/<file>.pdf` | the manual, so `#page=N` opens a citation |
+
+Static files are resolved and checked to be inside their one directory, so a request cannot walk out of it. Adding a manual means adding its short label and PDF filename to `MANUALS` in `server.py`; without an entry it still works, cited by its full name and with no PDF link.
+
 ## The contract
 
 Agreed with the UI side. Do not change the shape without telling the other person. The fields after `score` were added with the search implementation; the original five are unchanged.
@@ -92,12 +115,16 @@ def search(question: str, k: int = 3) -> dict:
           "score": float,      # 0.0-1.0
           "answer": str,       # ONE line of the protocol answering the question, verbatim
           "answer_page": int,  # PDF page that line is on
+          "answer_chunk_id": str,  # the part that line came from; UI marks it in the protocol view
           "chunk_id": str,     # id of the passage in data/chunks.json
           "protocol_id": str,  # "wv_t008"; pass to get_protocol()
           "protocol": str,     # "T008 – Burns"
           "chunk": {           # the whole protocol: every part, in reading order
             "protocol_id", "protocol", "manual", "kind",
-            "page", "pages", "printed_pages", "parts": [chunk ids], "text"
+            "page", "pages", "printed_pages", "parts": [chunk ids], "text",
+            "passages": [     # the same text, split back into parts so each can be cited
+              {"chunk_id", "section", "page", "printed_page", "text"}, ...
+            ]
           }
         }, ...
       ]
@@ -149,6 +176,7 @@ When `confident` is `False`, `results` is empty. Results below the threshold are
 
 - Current threshold: **0.45** (`THRESHOLD` in `search.py`)
 - Tuned against: 45 questions. 29 are covered by the manuals (clinical wording, bystander wording, bare identifiers), and all score ≥ 0.508 with an expected protocol in the top 3. 16 are not covered (off-topic, near-domain like "dog bite rabies shots" or "covid vaccine schedule", a year that is also a UN number), and all score ≤ 0.388. The midpoint is 0.448.
+- A line ending in ":" ("Common chemicals that cause burns:") introduces what follows instead of answering, so it is never picked as the answer line.
 - Known limits: idioms can trip the bystander wording ("this movie is choking me up" scores 0.49 → R001 Airway Management). Casual phrasings with no `LAY_TERMS` entry can land between 0.35 and 0.45 and be refused. Add a `LAY_TERMS` entry, add the question to `eval_search.py`, and rerun it.
 
 ## Fallback: BM25
