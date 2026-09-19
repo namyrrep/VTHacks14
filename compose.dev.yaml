@@ -1,0 +1,21 @@
+# Development overlay. Mounts the working tree over the image's copy of the source, so
+# an edit costs a restart (~15s, the model reload) instead of a rebuild.
+#
+#   docker compose -f compose.yaml -f compose.dev.yaml up          start
+#   docker compose -f compose.yaml -f compose.dev.yaml restart     after an edit
+#
+# Dependencies and the baked model still come from the image; only source is overlaid.
+# Rebuild for real when the lock file changes, or before you submit, so that what you
+# ship is what you tested:  docker compose build
+#
+# Documents/ is mounted too, so a manual can be swapped without a rebuild. Regenerating
+# the index stays a native step -- run `python ingest.py && python index.py` on the host
+# and restart; the mount picks up the new backend/data automatically.
+
+services:
+  blackout:
+    volumes:
+      - ./backend:/app/backend
+      - ./frontend:/app/frontend
+      - ./Documents:/app/Documents
+    restart: "no"
