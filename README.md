@@ -69,24 +69,47 @@ search contract, and [frontend/FRONTEND.md](frontend/FRONTEND.md) for the UI sta
 
 ## Running the application
 
-Do the install **while on wifi**: the embedding model (~90 MB) downloads once, then is
-cached locally.
+Requires Python 3.10+. Data files (`backend/data/chunks.json`, `index.npy`) and the source
+PDFs (`Documents/*.pdf`) are already committed, so there's nothing to generate before first
+run.
+
+**1. Install dependencies** (from the repo root, **while on wifi** — the embedding model,
+~90 MB, downloads once and is cached locally after this):
 
 ```bash
 pip install -r backend/requirements.txt
+```
+
+**2. Pre-warm the model cache** (also needs wifi, one time only):
+
+```bash
 python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('all-MiniLM-L6-v2')"
 ```
 
-Then, with or without a network:
+**3. Start the server** — with or without a network from here on:
 
 ```bash
 cd backend
-python server.py          # http://127.0.0.1:8000, opens a browser
+python server.py
 ```
 
-Turn on airplane mode and reload. It behaves exactly the same.
+Wait for `BLACKOUT is at http://127.0.0.1:8000/` in the terminal, then open that URL (it
+also opens a browser tab automatically). If port 8000 is taken, run with a different port:
+`python server.py --port 8010 --no-browser`.
 
-Rebuild the index only if the manuals change (`python ingest.py && python index.py`).
+**4. Verify it's really offline**: turn on airplane mode and reload the page. It behaves
+exactly the same.
+
+Rebuild the search index only if the manuals change: `python ingest.py && python index.py`.
+
+### Prefer Docker?
+
+```bash
+docker compose up --build
+```
+
+then open <http://localhost:8000>. See [DOCKER.md](DOCKER.md) for the dev-mode overlay,
+rebuild triggers, and troubleshooting.
 
 ## Accuracy
 

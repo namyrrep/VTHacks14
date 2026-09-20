@@ -133,6 +133,7 @@
     display: flex;
     flex-direction: column;
     overflow: hidden;
+    min-height: 0;
   }
 
   #content.pre-search {
@@ -156,6 +157,9 @@
   }
 
   #content.post-search #launch {
+    max-width: 80ch;
+    width: 100%;
+    margin: 0 auto;
     border-bottom: 1px solid var(--hairline);
   }
 
@@ -357,8 +361,28 @@
 
   #scrollback-wrap {
     flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--dim) transparent;
+  }
+
+  #scrollback-wrap::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  #scrollback-wrap::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  #scrollback-wrap::-webkit-scrollbar-thumb {
+    background: var(--dim);
+    border: 2px solid var(--bg);
+  }
+
+  #scrollback-wrap::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
   }
 
   #content.pre-search #scrollback-wrap {
@@ -367,6 +391,7 @@
 
   #scrollback {
     max-width: 80ch;
+    margin: 0 auto;
     padding: 24px;
   }
 
@@ -397,6 +422,39 @@
 
   .result-loading {
     color: var(--dim);
+  }
+
+  .loading-bar {
+    margin-top: 12px;
+    height: 2px;
+    background: var(--hairline);
+    position: relative;
+    overflow: hidden;
+  }
+
+  .loading-bar::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: -40%;
+    height: 100%;
+    width: 40%;
+    background: var(--accent);
+    animation: loading-sweep 1s ease-in-out infinite;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .loading-bar::after {
+      animation: none;
+      left: 0;
+      width: 100%;
+      opacity: 0.6;
+    }
+  }
+
+  @keyframes loading-sweep {
+    0% { left: -40%; }
+    100% { left: 100%; }
   }
 
   .result-block + .result-block {
@@ -461,12 +519,32 @@
 
   #map-view {
     flex: 1 1 auto;
+    min-height: 0;
     overflow-y: auto;
     overflow-x: hidden;
     display: flex;
     flex-direction: column;
     align-items: center;
     justify-content: center;
+    scrollbar-width: thin;
+    scrollbar-color: var(--dim) transparent;
+  }
+
+  #map-view::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  #map-view::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  #map-view::-webkit-scrollbar-thumb {
+    background: var(--dim);
+    border: 2px solid var(--bg);
+  }
+
+  #map-view::-webkit-scrollbar-thumb:hover {
+    background: var(--accent);
   }
 
   #map-view[hidden] {
@@ -853,6 +931,7 @@
       <span>OFFLINE</span>
       <span id="stat-manuals">— MANUALS</span>
       <span id="stat-protocols">— PROTOCOLS</span>
+      <span id="stat-model">—</span>
       <span>0 EXTERNAL CALLS</span>
     </div>
   </div>
@@ -5825,9 +5904,12 @@
         stats.manuals.length + ' MANUALS';
       document.getElementById('stat-protocols').textContent =
         stats.protocols.toLocaleString() + ' PROTOCOLS';
+      document.getElementById('stat-model').textContent =
+        stats.model.split('/').pop().toUpperCase();
     } catch (err) {
       document.getElementById('stat-manuals').textContent = 'BACKEND OFFLINE';
       document.getElementById('stat-protocols').textContent = '';
+      document.getElementById('stat-model').textContent = '';
     }
   }
 
@@ -5995,7 +6077,12 @@
 
     const resultContainer = document.createElement('div');
     resultContainer.className = 'result-loading';
-    resultContainer.textContent = 'SEARCHING PROTOCOLS';
+    const loadingText = document.createElement('div');
+    loadingText.textContent = 'SEARCHING PROTOCOLS';
+    const loadingBar = document.createElement('div');
+    loadingBar.className = 'loading-bar';
+    resultContainer.appendChild(loadingText);
+    resultContainer.appendChild(loadingBar);
 
     exchange.appendChild(queryLine);
     exchange.appendChild(resultContainer);
