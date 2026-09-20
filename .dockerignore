@@ -1,0 +1,28 @@
+# Keep the build context small and the image free of things a judge never runs.
+.git
+.gitignore
+**/__pycache__
+**/*.pyc
+**/*.pyo
+
+# docs and screenshots are for the repo, not the runtime
+docs/
+**/*.md
+
+# local environments
+.venv
+venv
+env
+.python-version
+
+# editor and OS noise
+.idea
+.vscode
+**/.DS_Store
+Thumbs.db
+
+# the container tooling does not belong inside the container
+Dockerfile
+.dockerignore
+compose.yaml
+compose.dev.yaml

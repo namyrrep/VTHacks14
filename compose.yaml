@@ -1,0 +1,17 @@
+# Demo and submission. Runs the sealed image -- what a judge gets, with nothing from
+# the working tree leaking in.
+#
+#   docker compose up --build       build and run
+#   docker compose up               run (rebuilds nothing)
+#
+# Then open http://localhost:8000 -- the container has no browser to open it for you.
+
+services:
+  blackout:
+    build:
+      context: .
+    image: blackout:latest
+    container_name: blackout
+    ports:
+      - "8000:8000"
+    restart: unless-stopped

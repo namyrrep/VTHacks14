@@ -1,0 +1,42 @@
+# Exact versions for reproducible container builds.
+#
+# Generated from the environment that produced backend/data/index.npy. Keep them in
+# sync with that index: search.py embeds the *question* at query time and compares it
+# against the *stored* vectors, so both must come from the same model code. A version
+# drift shifts cosine scores against THRESHOLD = 0.45 and turns correct answers into
+# the refusal state.
+#
+# Native development is unaffected -- it still uses requirements.txt. Only the
+# Dockerfile reads this file.
+#
+# After changing a dependency: update it here, `docker compose build`, then re-run
+# `python eval_search.py` if anything in the embedding chain moved.
+
+--extra-index-url https://download.pytorch.org/whl/cpu
+
+# direct dependencies (mirrors requirements.txt)
+pymupdf==1.28.2
+sentence-transformers==6.1.0
+numpy==2.5.3
+rank_bm25==0.2.2
+
+# embedding chain -- these decide the vectors, so they are pinned deliberately.
+# torch is the +cpu build: the default PyPI wheel is CUDA-enabled and ~2 GB larger.
+torch==2.14.0+cpu
+transformers==5.17.0
+tokenizers==0.23.2
+safetensors==0.8.0
+huggingface_hub==1.32.0
+scipy==1.18.1
+scikit-learn==1.9.1
+
+# support libraries
+filelock==3.20.2
+fsspec==2026.9.0
+Jinja2==3.1.6
+joblib==1.6.0
+networkx==3.6.1
+regex==2026.9.10
+sympy==1.14.0
+threadpoolctl==3.7.0
+tqdm==4.67.1
