@@ -620,6 +620,75 @@
     outline: none;
   }
 
+  #map-controls {
+    margin-top: 16px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+
+  #placement-hint {
+    color: var(--accent);
+    font-size: 13px;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  #grid-map.placing {
+    cursor: crosshair;
+  }
+
+  .create-form label {
+    display: block;
+    margin-top: 16px;
+    margin-bottom: 4px;
+    color: var(--dim);
+    font-size: 12px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .create-form label:first-child {
+    margin-top: 0;
+  }
+
+  .create-form input,
+  .create-form select {
+    width: 100%;
+    font: inherit;
+    color: var(--fg);
+    background: var(--bg);
+    border: 1px solid var(--hairline);
+    padding: 8px 12px;
+  }
+
+  .create-form input:focus,
+  .create-form select:focus {
+    outline: none;
+    border-color: var(--accent);
+  }
+
+  .create-form .form-actions {
+    margin-top: 16px;
+    display: flex;
+    gap: 8px;
+  }
+
+  .cancel-btn {
+    font: inherit;
+    color: var(--dim);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    padding: 8px 12px;
+    cursor: pointer;
+  }
+
+  .cancel-btn:hover, .cancel-btn:focus {
+    color: var(--fg);
+    border-color: var(--accent);
+    outline: none;
+  }
+
   @media (max-width: 900px) {
     #status-bar, #launch, #scrollback, #map-wrap {
       padding-left: 16px;
@@ -5187,6 +5256,10 @@
 </svg>
       </div>
       <div class="map-legend" id="map-legend"></div>
+      <div id="map-controls">
+        <button class="ask-btn" type="button" id="new-incident-btn">+ NEW INCIDENT</button>
+        <span id="placement-hint" hidden>Click the map to place it — Esc to cancel</span>
+      </div>
       <div id="incident-panel">
         <div class="incident-empty">Select a marker on the grid to view incident details.</div>
       </div>
@@ -5263,6 +5336,8 @@
   const gridMap = document.getElementById('grid-map');
   const mapLegend = document.getElementById('map-legend');
   const incidentPanel = document.getElementById('incident-panel');
+  const newIncidentBtn = document.getElementById('new-incident-btn');
+  const placementHint = document.getElementById('placement-hint');
 
   let hasSearched = false;
   let currentResults = [];   // the results on screen, selectable by number key
@@ -5339,6 +5414,29 @@
     }
   ];
 
+  function createMarker(incident) {
+    const marker = document.createElement('button');
+    marker.type = 'button';
+    marker.className = 'marker';
+    marker.textContent = incident.glyph;
+    marker.style.left = (incident.x / MAP_W * 100) + '%';
+    marker.style.top = (incident.y / MAP_H * 100) + '%';
+    marker.setAttribute('aria-label', incident.category + ': ' + incident.title);
+    marker.addEventListener('click', () => selectIncident(incident, marker));
+    return marker;
+  }
+
+  function refreshLegend() {
+    const legendParts = [];
+    const seen = new Set();
+    INCIDENTS.forEach(i => {
+      if (seen.has(i.glyph)) return;
+      seen.add(i.glyph);
+      legendParts.push(i.glyph + ' ' + i.category);
+    });
+    mapLegend.textContent = legendParts.join('  ·  ');
+  }
+
   function buildMap() {
     ZONE_LABELS.forEach(zone => {
       const el = document.createElement('div');
@@ -5350,25 +5448,18 @@
     });
 
     INCIDENTS.forEach(incident => {
-      const marker = document.createElement('button');
-      marker.type = 'button';
-      marker.className = 'marker';
-      marker.textContent = incident.glyph;
-      marker.style.left = (incident.x / MAP_W * 100) + '%';
-      marker.style.top = (incident.y / MAP_H * 100) + '%';
-      marker.setAttribute('aria-label', incident.category + ': ' + incident.title);
-      marker.addEventListener('click', () => selectIncident(incident, marker));
-      gridMap.appendChild(marker);
+      gridMap.appendChild(createMarker(incident));
     });
 
-    const legendParts = [];
-    const seen = new Set();
-    INCIDENTS.forEach(i => {
-      if (seen.has(i.glyph)) return;
-      seen.add(i.glyph);
-      legendParts.push(i.glyph + ' ' + i.category);
-    });
-    mapLegend.textContent = legendParts.join('  ·  ');
+    refreshLegend();
+  }
+
+  function addIncident(incident) {
+    INCIDENTS.push(incident);
+    const marker = createMarker(incident);
+    gridMap.appendChild(marker);
+    refreshLegend();
+    selectIncident(incident, marker);
   }
 
   function selectIncident(incident, marker) {
@@ -5402,6 +5493,122 @@
     incidentPanel.appendChild(titleLine);
     incidentPanel.appendChild(zoneLine);
     incidentPanel.appendChild(askBtn);
+  }
+
+  /* ---------------------------------------------- create incident */
+
+  const CATEGORY_GLYPHS = {
+    'HAZMAT': 'H',
+    'CONFINED SPACE': 'C',
+    'EMS': 'E',
+    'STRUCTURAL': 'S',
+    'OTHER': 'O'
+  };
+
+  let placing = false;
+
+  function armPlacement() {
+    placing = true;
+    newIncidentBtn.hidden = true;
+    placementHint.hidden = false;
+    gridMap.classList.add('placing');
+  }
+
+  function disarmPlacement() {
+    placing = false;
+    newIncidentBtn.hidden = false;
+    placementHint.hidden = true;
+    gridMap.classList.remove('placing');
+  }
+
+  function openCreateForm(x, y) {
+    incidentPanel.innerHTML = '';
+
+    const form = document.createElement('form');
+    form.className = 'create-form';
+
+    const catLabel = document.createElement('label');
+    catLabel.textContent = 'Category';
+    const catSelect = document.createElement('select');
+    Object.keys(CATEGORY_GLYPHS).forEach(cat => {
+      const opt = document.createElement('option');
+      opt.value = cat;
+      opt.textContent = cat;
+      catSelect.appendChild(opt);
+    });
+
+    const titleLabel = document.createElement('label');
+    titleLabel.textContent = 'Title';
+    const titleInput = document.createElement('input');
+    titleInput.type = 'text';
+    titleInput.required = true;
+    titleInput.placeholder = 'e.g. Gas leak — apartment complex';
+
+    const zoneLabel = document.createElement('label');
+    zoneLabel.textContent = 'Location';
+    const zoneInput = document.createElement('input');
+    zoneInput.type = 'text';
+    zoneInput.placeholder = 'e.g. North Main St';
+
+    const questionLabel = document.createElement('label');
+    questionLabel.textContent = 'Protocol question';
+    const questionInput = document.createElement('input');
+    questionInput.type = 'text';
+    questionInput.required = true;
+    questionInput.placeholder = 'What should ASK PROTOCOL search for?';
+
+    const actions = document.createElement('div');
+    actions.className = 'form-actions';
+
+    const createBtn = document.createElement('button');
+    createBtn.type = 'submit';
+    createBtn.className = 'ask-btn';
+    createBtn.textContent = 'CREATE INCIDENT';
+
+    const cancelBtn = document.createElement('button');
+    cancelBtn.type = 'button';
+    cancelBtn.className = 'cancel-btn';
+    cancelBtn.textContent = 'CANCEL';
+    cancelBtn.addEventListener('click', () => {
+      incidentPanel.innerHTML = '';
+      incidentPanel.appendChild(emptyState());
+    });
+
+    actions.appendChild(createBtn);
+    actions.appendChild(cancelBtn);
+
+    form.appendChild(catLabel);
+    form.appendChild(catSelect);
+    form.appendChild(titleLabel);
+    form.appendChild(titleInput);
+    form.appendChild(zoneLabel);
+    form.appendChild(zoneInput);
+    form.appendChild(questionLabel);
+    form.appendChild(questionInput);
+    form.appendChild(actions);
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const category = catSelect.value;
+      addIncident({
+        category,
+        glyph: CATEGORY_GLYPHS[category],
+        x, y,
+        title: titleInput.value.trim(),
+        zone: zoneInput.value.trim() || 'Unnamed location',
+        question: questionInput.value.trim()
+      });
+    });
+
+    incidentPanel.appendChild(form);
+    titleInput.focus();
+  }
+
+  function emptyState() {
+    const el = document.createElement('div');
+    el.className = 'incident-empty';
+    el.textContent = 'Select a marker on the grid to view incident details.';
+    return el;
   }
 
   /* ---------------------------------------------- status bar */
@@ -5639,6 +5846,23 @@
   homeBtn.addEventListener('click', goHome);
   tabSearch.addEventListener('click', () => setView('search'));
   tabMap.addEventListener('click', () => setView('map'));
+
+  newIncidentBtn.addEventListener('click', armPlacement);
+
+  gridMap.addEventListener('click', (e) => {
+    if (!placing || e.target.closest('.marker')) return;
+    const rect = gridMap.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width * MAP_W;
+    const y = (e.clientY - rect.top) / rect.height * MAP_H;
+    disarmPlacement();
+    openCreateForm(x, y);
+  });
+
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' && placing) {
+      disarmPlacement();
+    }
+  });
 
   scrollbackWrap.addEventListener('click', (e) => {
     if (window.getSelection().toString() === '' && !e.target.closest('button, a')) {
