@@ -11,6 +11,8 @@
     --dim: rgba(236, 234, 227, 0.55);
     --hairline: rgba(236, 234, 227, 0.20);
     --accent: #5FD0E6;
+    --status-red: #F0645A;
+    --status-green: #4CD97B;
     --lh: 24px;
   }
 
@@ -72,7 +74,11 @@
   #status-bar .brand:hover,
   #status-bar .brand:focus {
     color: var(--accent);
-    outline: none;
+  }
+
+  #status-bar .brand:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   #view-toggle {
@@ -95,7 +101,11 @@
 
   .tab:hover, .tab:focus {
     color: var(--fg);
-    outline: none;
+  }
+
+  .tab:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .tab[aria-pressed="true"] {
@@ -201,7 +211,11 @@
 
   .choice:hover, .choice:focus {
     border-color: var(--accent);
-    outline: none;
+  }
+
+  .choice:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .choice .answer-text {
@@ -334,6 +348,11 @@
     outline: none;
   }
 
+  #search-box:focus-within {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   /* ---------- scrollback ---------- */
 
   #scrollback-wrap {
@@ -456,7 +475,7 @@
 
   #map-wrap {
     width: 100%;
-    max-width: 1400px;
+    max-width: 1100px;
     padding: 24px;
   }
 
@@ -539,8 +558,8 @@
 
   .marker {
     position: absolute;
-    width: 22px;
-    height: 22px;
+    width: 26px;
+    height: 26px;
     transform: translate(-50%, -50%);
     display: flex;
     align-items: center;
@@ -548,23 +567,84 @@
     font: inherit;
     font-size: 12px;
     font-weight: 700;
-    color: var(--dim);
+    color: var(--status-red);
     background: var(--bg);
-    border: 1px solid var(--hairline);
+    border: 2px dashed var(--status-red);
     padding: 0;
     cursor: pointer;
   }
 
+  .marker.responded {
+    color: var(--status-green);
+    border-color: var(--status-green);
+    border-style: solid;
+  }
+
   .marker:hover, .marker:focus {
-    color: var(--fg);
-    border-color: var(--accent);
-    outline: none;
+    opacity: 0.8;
+  }
+
+  .marker:focus-visible {
+    outline: 2px solid var(--fg);
+    outline-offset: 2px;
   }
 
   .marker.selected {
     color: var(--bg);
-    background: var(--accent);
+    background: var(--status-red);
+    border-color: var(--status-red);
+  }
+
+  .marker.selected.responded {
+    background: var(--status-green);
+    border-color: var(--status-green);
+  }
+
+  .status-row {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .status-dot {
+    width: 9px;
+    height: 9px;
+    background: var(--status-red);
+    flex: 0 0 auto;
+  }
+
+  .status-dot.responded {
+    background: var(--status-green);
+  }
+
+  .status-label {
+    color: var(--dim);
+    font-size: 13px;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+  }
+
+  .status-toggle {
+    font: inherit;
+    color: var(--dim);
+    background: transparent;
+    border: 1px solid var(--hairline);
+    padding: 8px 12px;
+    cursor: pointer;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+    margin-top: 16px;
+  }
+
+  .status-toggle:hover, .status-toggle:focus {
+    color: var(--fg);
     border-color: var(--accent);
+  }
+
+  .status-toggle:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .map-legend {
@@ -617,7 +697,11 @@
 
   .ask-btn:hover, .ask-btn:focus {
     opacity: 0.85;
-    outline: none;
+  }
+
+  .ask-btn:focus-visible {
+    outline: 2px solid var(--fg);
+    outline-offset: 2px;
   }
 
   #map-controls {
@@ -636,6 +720,11 @@
 
   #grid-map.placing {
     cursor: crosshair;
+  }
+
+  #grid-map:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .create-form label {
@@ -664,8 +753,13 @@
 
   .create-form input:focus,
   .create-form select:focus {
-    outline: none;
     border-color: var(--accent);
+  }
+
+  .create-form input:focus-visible,
+  .create-form select:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   .create-form .form-actions {
@@ -686,13 +780,61 @@
   .cancel-btn:hover, .cancel-btn:focus {
     color: var(--fg);
     border-color: var(--accent);
-    outline: none;
+  }
+
+  .cancel-btn:focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
   }
 
   @media (max-width: 900px) {
     #status-bar, #launch, #scrollback, #map-wrap {
       padding-left: 16px;
       padding-right: 16px;
+    }
+  }
+
+  @media (max-width: 480px) {
+    body {
+      font-size: 14px;
+    }
+
+    #status-bar {
+      padding-top: 16px;
+      padding-bottom: 16px;
+    }
+
+    .zone-label {
+      font-size: 9px;
+    }
+
+    #map-controls {
+      flex-wrap: wrap;
+      row-gap: 8px;
+    }
+
+    .create-form .form-actions {
+      flex-wrap: wrap;
+    }
+
+    .create-form .form-actions button {
+      flex: 1 1 auto;
+    }
+  }
+
+  @media (pointer: coarse) {
+    .marker {
+      width: 32px;
+      height: 32px;
+    }
+
+    .status-toggle,
+    .cancel-btn,
+    .ask-btn,
+    .create-form input,
+    .create-form select {
+      padding-top: 12px;
+      padding-bottom: 12px;
     }
   }
 </style>
@@ -731,14 +873,14 @@
     </div>
 
     <div id="scrollback-wrap">
-      <div id="scrollback"></div>
+      <div id="scrollback" aria-live="polite"></div>
     </div>
   </div>
 
   <div id="map-view" hidden>
     <div id="map-wrap">
-      <div class="view-heading">Blacksburg — active incidents</div>
-      <div id="grid-map" role="group" aria-label="Blacksburg incident grid">
+      <div class="view-heading" id="map-heading" tabindex="-1">Blacksburg — active incidents</div>
+      <div id="grid-map" role="group" aria-label="Blacksburg incident grid" tabindex="0">
         <svg id="road-overlay" viewBox="0 0 1000 546.05" preserveAspectRatio="none" aria-hidden="true">
 <g class="layer-green">
 <polygon class="green-space" points="516.3,150.1 498.2,128.5 483.8,120.5 518.3,94.1 520.9,94.5 530.0,110.1 530.8,113.2 541.6,129.8 516.3,150.1" />
@@ -5258,9 +5400,9 @@
       <div class="map-legend" id="map-legend"></div>
       <div id="map-controls">
         <button class="ask-btn" type="button" id="new-incident-btn">+ NEW INCIDENT</button>
-        <span id="placement-hint" hidden>Click the map to place it — Esc to cancel</span>
+        <span id="placement-hint" hidden aria-live="polite">Click the map to place it, or press Enter on the grid to place it at the center — Esc to cancel</span>
       </div>
-      <div id="incident-panel">
+      <div id="incident-panel" aria-live="polite">
         <div class="incident-empty">Select a marker on the grid to view incident details.</div>
       </div>
     </div>
@@ -5348,6 +5490,7 @@
       mapView.hidden = false;
       tabSearch.setAttribute('aria-pressed', 'false');
       tabMap.setAttribute('aria-pressed', 'true');
+      document.getElementById('map-heading').focus();
     } else {
       content.hidden = false;
       mapView.hidden = true;
@@ -5373,6 +5516,8 @@
   const MAP_W = 1000;
   const MAP_H = 546.05;
 
+  const STREET_POINTS = [[643.4,238.7,"Lee Street"],[639.7,242,"Lee Street"],[625.5,254.2,"Lee Street"],[612.4,265.4,"Lee Street"],[50,265,"Duck Pond Drive"],[43.4,275.4,"Duck Pond Drive"],[36.6,278.9,"Duck Pond Drive"],[111.2,561.7,"Crest Lane"],[113.3,551.5,"Crest Lane"],[113,536.5,"Crest Lane"],[111.4,529.3,"Crest Lane"],[110.5,524.4,"Crest Lane"],[92.7,515.8,"Crest Lane"],[77,515.4,"Crest Lane"],[158.5,480,"Ag Quad Lane"],[163.8,478.1,"Ag Quad Lane"],[193.7,468.1,"Ag Quad Lane"],[221.5,455.8,"Ag Quad Lane"],[221.5,455.8,"Ag Quad Lane"],[232,451.7,"Ag Quad Lane"],[232,451.7,"Ag Quad Lane"],[238,449.8,"Ag Quad Lane"],[239.7,449.3,"Ag Quad Lane"],[242.4,448.2,"Ag Quad Lane"],[805,425.7,"Mountain View Drive"],[809,422.2,"Mountain View Drive"],[845,391,"Mountain View Drive"],[882.1,359.1,"Mountain View Drive"],[940.5,428.5,"Penn Street"],[937.8,425.5,"Penn Street"],[912.9,398,"Penn Street"],[1071.8,470.2,"Reynolds Avenue"],[1037.5,500.3,"Reynolds Avenue"],[996.8,535.6,"Reynolds Avenue"],[902.6,537.7,"Upland Road"],[906.7,534.2,"Upland Road"],[934.5,510.2,"Upland Road"],[1003,448.6,"Upland Road"],[1070.3,388.7,"Upland Road"],[1109.2,355.4,"Upland Road"],[817.2,359.5,"Church Street"],[845,391,"Church Street"],[861.8,410.1,"Church Street"],[643.4,238.7,"South Main Street"],[645.3,240.9,"South Main Street"],[658.6,256.7,"South Main Street"],[972.8,107.3,"Prospect Street"],[975.6,110.6,"Prospect Street"],[999,137.7,"Prospect Street"],[1002.4,142.9,"Prospect Street"],[1009.1,174.7,"Prospect Street"],[1011.3,178.8,"Prospect Street"],[1038.9,212.2,"Prospect Street"],[991.1,128.5,"Devon Lane"],[994.8,125.3,"Devon Lane"],[1023.7,100.8,"Devon Lane"],[1066.7,64.6,"Devon Lane"],[821.4,532.2,"Hemlock Drive"],[818.2,535,"Hemlock Drive"],[790,559.9,"Hemlock Drive"],[992.2,296,"Eakin Street"],[989.5,298.3,"Eakin Street"],[953.9,328.6,"Eakin Street"],[951.8,330.5,"Eakin Street"],[777.7,394.5,"Eheart Street"],[780.8,391.6,"Eheart Street"],[781.7,390.8,"Eheart Street"],[806.8,368.6,"Eheart Street"],[988.8,213.3,"Willard Drive"],[965.3,185.7,"Willard Drive"],[930.1,144.3,"Willard Drive"],[527.7,464.7,"Ingles Court"],[540.5,479.9,"Ingles Court"],[552.4,495.3,"Ingles Court"],[552.6,497.1,"Ingles Court"],[548.4,504,"Ingles Court"],[544.4,510.6,"Ingles Court"],[545,516.1,"Ingles Court"],[557.2,440.1,"Clay Circle"],[577.3,464.2,"Clay Circle"],[586.2,476.2,"Clay Circle"],[525.9,304.9,"Wall Street"],[527,303.1,"Wall Street"],[557.1,277,"Wall Street"],[569.6,265.9,"Wall Street"],[403.2,41.3,"Turner Street Northwest"],[398.7,45.2,"Turner Street Northwest"],[395.7,47.1,"Turner Street Northwest"],[393.1,48.1,"Turner Street Northwest"],[390.9,48.5,"Turner Street Northwest"],[388.5,48.6,"Turner Street Northwest"],[385.2,47.9,"Turner Street Northwest"],[382.2,46.3,"Turner Street Northwest"],[306.6,175.9,"Stanger Street"],[304.8,172.7,"Stanger Street"],[304,170.4,"Stanger Street"],[573.8,361.8,"Otey Street"],[571.3,358.9,"Otey Street"],[537.2,318.2,"Otey Street"],[525.9,304.9,"Otey Street"],[342.8,222,"Alumni Mall"],[346.3,219.4,"Alumni Mall"],[352.6,213.4,"Alumni Mall"],[260.5,109.3,"Old Turner Street"],[267.5,102.4,"Old Turner Street"],[268.4,101.5,"Old Turner Street"],[271.3,98.8,"Old Turner Street"],[251.4,-6.4,"Perry Street"],[249.3,-1.6,"Perry Street"],[246.5,6.2,"Perry Street"],[244.2,13.3,"Perry Street"],[239.4,20.8,"Perry Street"],[235.2,24.8,"Perry Street"],[225.2,34,"Perry Street"],[534,396,"Kent Street"],[530,391,"Kent Street"],[502.8,358.6,"Kent Street"],[486.8,339.7,"Kent Street"],[151.8,330.3,"Drillfield Drive"],[147.1,335.1,"Drillfield Drive"],[130.8,350.7,"Drillfield Drive"],[549.2,126.7,"College Avenue"],[544.1,131.4,"College Avenue"],[543,132.3,"College Avenue"],[145.5,392.6,"Drillfield Drive"],[150.2,390.6,"Drillfield Drive"],[510.4,284.4,"Roanoke Street"],[513.8,281.6,"Roanoke Street"],[549,252.2,"Roanoke Street"],[571.4,233.6,"Roanoke Street"],[575.5,230.2,"Roanoke Street"],[516,78.8,"Alumni Mall"],[502.7,86.4,"Alumni Mall"],[485.2,100.2,"Alumni Mall"],[335,-61.5,"Gilbert Street"],[328.2,-61.7,"Gilbert Street"],[320.3,-63.5,"Gilbert Street"],[313.4,-62.5,"Gilbert Street"],[309.6,-60.4,"Gilbert Street"],[307.7,-58.9,"Gilbert Street"],[303.5,-53.8,"Gilbert Street"],[296,-36.5,"Gilbert Street"],[293.7,-28.9,"Gilbert Street"],[285.2,-0.1,"Gilbert Street"],[283.8,4.5,"Gilbert Street"],[121.1,402.9,"Drillfield Drive"],[124.4,401.5,"Drillfield Drive"],[126.5,400.6,"Drillfield Drive"],[145.5,392.6,"Drillfield Drive"],[154.1,471.1,"West Campus Drive"],[144.1,458.3,"West Campus Drive"],[139.4,451,"West Campus Drive"],[135.7,442.4,"West Campus Drive"],[30.4,278.7,"Duck Pond Drive"],[22.3,279.6,"Duck Pond Drive"],[14.6,282.1,"Duck Pond Drive"],[5.7,287.7,"Duck Pond Drive"],[0,293.7,"Duck Pond Drive"],[-7.7,306.1,"Duck Pond Drive"],[-12,317.1,"Duck Pond Drive"],[-14,324.5,"Duck Pond Drive"],[-16.4,338.4,"Duck Pond Drive"],[-20.7,348.1,"Duck Pond Drive"],[-26.3,354.8,"Duck Pond Drive"],[-30,357.9,"Duck Pond Drive"],[36.6,278.9,"Duck Pond Drive"],[30.4,278.7,"Duck Pond Drive"],[59,279.1,"Duck Pond Drive"],[53.7,278.9,"Duck Pond Drive"],[42.6,278.9,"Duck Pond Drive"],[36.6,278.9,"Duck Pond Drive"],[253.3,77.3,"Stanger Street"],[236.8,58.8,"Stanger Street"],[226.1,49.9,"Stanger Street"],[691.5,471.7,"Eheart Street"],[713.4,452.7,"Eheart Street"],[732.3,435.3,"Eheart Street"],[673.8,612.9,"Harrell Street"],[658.2,558.6,"Harrell Street"],[649.9,527.9,"Harrell Street"],[640.7,495.9,"Harrell Street"],[636.7,486.9,"Harrell Street"],[649.4,425.2,"Miller Street"],[654.8,417,"Miller Street"],[688.5,386.3,"Miller Street"],[692.2,383.1,"Miller Street"],[609.4,505.5,"Houston Street"],[616.3,499.1,"Houston Street"],[631.5,485.5,"Houston Street"],[634.6,483,"Houston Street"],[567.4,148.1,"North Main Street"],[554.1,132.8,"North Main Street"],[552.4,130.8,"North Main Street"],[549.2,126.7,"North Main Street"],[-33.6,523.7,"Grove Lane"],[-10.9,521.2,"Grove Lane"],[34.1,516.4,"Grove Lane"],[59.3,514.9,"Grove Lane"],[59.3,514.9,"Grove Lane"],[68.8,515.2,"Grove Lane"],[72.7,515.3,"Grove Lane"],[77,515.4,"Grove Lane"],[77,515.4,"Grove Lane"],[72,513.5,"Grove Lane"],[69.4,510.9,"Grove Lane"],[67.9,507.3,"Grove Lane"],[842.8,70.1,"Rutledge Street"],[826.4,51.5,"Rutledge Street"],[811.3,34.3,"Rutledge Street"],[749.2,149.2,"Wharton Street"],[772.3,175.9,"Wharton Street"],[781.1,186,"Wharton Street"],[681.6,140.2,"Penn Street"],[683.2,142.2,"Penn Street"],[683.8,143,"Penn Street"],[700.3,161.7,"Penn Street"],[646.7,169.8,"Church Street"],[649.5,173,"Church Street"],[660.7,185.9,"Church Street"],[900.9,21,"Lee Street"],[977.5,-43.3,"Lee Street"],[1019.3,-79.3,"Lee Street"],[1059.8,-113.6,"Lee Street"],[1128.8,-172.9,"Lee Street"],[1142.2,-185,"Lee Street"],[847.8,17.7,"Bixby Court"],[859,9.3,"Bixby Court"],[864.5,8.6,"Bixby Court"],[868.4,6.9,"Bixby Court"],[873.6,1.5,"Bixby Court"],[683.2,71.1,"Wharton Street"],[713.4,107.3,"Wharton Street"],[716.4,110.8,"Wharton Street"],[714.8,178.5,"Penn Street"],[726.8,192.8,"Penn Street"],[746.3,216.2,"Penn Street"],[838.3,7.5,"Woolwine Street"],[870.6,42.2,"Woolwine Street"],[872.9,44.7,"Woolwine Street"],[694.5,260.5,"Washington Street"],[707.8,249.2,"Washington Street"],[709.2,248.1,"Washington Street"],[712,245.7,"Washington Street"],[658.9,-28.5,"Old Harding Avenue"],[661.6,-18.7,"Old Harding Avenue"],[664,8.1,"Old Harding Avenue"],[665,15.5,"Old Harding Avenue"],[613.6,131,"Jackson Street"],[629.5,116.3,"Jackson Street"],[632.7,113.4,"Jackson Street"],[703.9,51.5,"Bennett Street"],[702.8,47.9,"Bennett Street"],[683.1,27.7,"Bennett Street"],[670.8,17.8,"Bennett Street"],[665,15.5,"Bennett Street"],[716.4,110.8,"Roanoke Street"],[727.6,101.4,"Roanoke Street"],[730,99.3,"Roanoke Street"],[739.5,91.2,"Roanoke Street"],[756.3,77,"Roanoke Street"],[764.9,69.7,"Roanoke Street"],[771.4,64.2,"Roanoke Street"],[781.8,55.4,"Roanoke Street"],[798.4,41.3,"Roanoke Street"],[594,69.9,"Progress Street"],[598.7,74.7,"Progress Street"],[609.3,86.2,"Progress Street"],[617.5,95.5,"Progress Street"],[630.8,111.1,"Progress Street"],[632.7,113.4,"Progress Street"],[579.2,161.5,"Jackson Street"],[553.6,182.9,"Jackson Street"],[544.7,190.8,"Jackson Street"],[647.4,101,"Jackson Street"],[650,98.8,"Jackson Street"],[667.1,84.6,"Jackson Street"],[683.2,71.1,"Jackson Street"],[536.9,90.4,"Wilson Avenue"],[553.1,73.4,"Wilson Avenue"],[555.9,70.3,"Wilson Avenue"],[689.6,4.4,"Harding Avenue"],[700.2,-1.3,"Harding Avenue"],[711.3,-8.7,"Harding Avenue"],[721.3,-15.9,"Harding Avenue"],[733.7,-26.5,"Harding Avenue"],[742.9,-35.5,"Harding Avenue"],[747.6,-39.8,"Harding Avenue"],[758.7,-48.7,"Harding Avenue"],[783.9,-66.5,"Harding Avenue"],[808.4,-83.8,"Harding Avenue"],[813.2,-86.6,"Harding Avenue"],[819.7,-90.1,"Harding Avenue"],[594,69.9,"Harding Avenue"],[598,67.5,"Harding Avenue"],[618.9,55.1,"Harding Avenue"],[629.9,47.9,"Harding Avenue"],[635.5,43.5,"Harding Avenue"],[659.3,20.6,"Harding Avenue"],[665,15.5,"Harding Avenue"],[496.4,51.7,"Faculty Street"],[514.5,33.9,"Faculty Street"],[536.7,12.8,"Faculty Street"],[539.2,10.3,"Faculty Street"],[-72.6,-286.9,"McBryde Drive"],[-71.3,-273.4,"McBryde Drive"],[-59.3,-229.8,"McBryde Drive"],[-53.8,-213.6,"McBryde Drive"],[-43.6,-191.3,"McBryde Drive"],[-35.8,-180,"McBryde Drive"],[-30.3,-174,"McBryde Drive"],[-23.1,-164.8,"McBryde Drive"],[-18.1,-155.8,"McBryde Drive"],[-13.5,-143.8,"McBryde Drive"],[-9.5,-130.8,"McBryde Drive"],[-5,-112.3,"McBryde Drive"],[0.7,-92.8,"McBryde Drive"],[10.1,-70.8,"McBryde Drive"],[16.5,-57.6,"McBryde Drive"],[44,5.5,"McBryde Drive"],[50.8,18.9,"McBryde Drive"],[53.2,23.2,"McBryde Drive"],[636,374.1,"Clay Street"],[657.4,356.4,"Clay Street"],[669.3,346.6,"Clay Street"],[673,343.4,"Clay Street"],[242,121.1,"Old Turner Street"],[237.8,121.7,"Old Turner Street"],[232.9,126.3,"Old Turner Street"],[233.3,129.2,"Old Turner Street"],[236.4,130,"Old Turner Street"],[240.2,128,"Old Turner Street"],[243.5,124.1,"Old Turner Street"],[549.2,126.7,"College Avenue Extension"],[553.4,120.9,"College Avenue Extension"],[554.6,117.5,"College Avenue Extension"],[552.5,113.4,"College Avenue Extension"],[533.5,107.9,"North Main Street"],[539.6,118.4,"North Main Street"],[542.5,122.5,"North Main Street"],[545.7,125.2,"North Main Street"],[146,11.4,"Stanger Street"],[151.4,15.5,"Stanger Street"],[50,265,"West Campus Drive"],[41.9,252.3,"West Campus Drive"],[39.5,248.7,"West Campus Drive"],[39.5,248.7,"West Campus Drive"],[23.6,224,"West Campus Drive"],[707.7,314.3,"South Main Street"],[711.4,318.4,"South Main Street"],[735.2,345.6,"South Main Street"],[571.9,48.1,"Wilson Avenue"],[574.1,43.9,"Wilson Avenue"],[577,38,"Wilson Avenue"],[578.1,30.3,"Wilson Avenue"],[579.1,28.3,"Wilson Avenue"],[624.4,0.8,"Wilson Avenue"],[864.8,494.3,"South Main Street"],[870.5,500.9,"South Main Street"],[884.4,516.8,"South Main Street"],[905.4,540.8,"South Main Street"],[129.6,-17,"Stanger Street"],[131.6,-13,"Stanger Street"],[133.1,-10.1,"Stanger Street"],[138.8,2.4,"Stanger Street"],[317.7,16,"Barger Street"],[316.2,20,"Barger Street"],[314.9,22.3,"Barger Street"],[293.7,42,"Barger Street"],[262.1,69.6,"Barger Street"],[257.5,73.7,"Barger Street"],[328.6,47.3,"Old Turner Street"],[346.9,31.4,"Old Turner Street"],[348.3,30.2,"Old Turner Street"],[350.9,28.1,"Old Turner Street"],[597.9,145.6,"Jackson Street"],[609.6,134.8,"Jackson Street"],[610.5,133.9,"Jackson Street"],[613.6,131,"Jackson Street"],[126.8,-22.4,"Prices Fork Road"],[120.9,-19.4,"Prices Fork Road"],[94.2,-2.5,"Prices Fork Road"],[81.7,5.2,"Prices Fork Road"],[453.8,207.1,"Otey Street"],[454.2,211.1,"Otey Street"],[461.8,221.8,"Otey Street"],[463.2,223.7,"Otey Street"],[377.8,267.3,"Kent Street"],[373.3,263.4,"Kent Street"],[372.3,262.4,"Kent Street"],[369.5,268.8,"Kent Street"],[372.6,268.9,"Kent Street"],[376,270.1,"Kent Street"],[336.8,214.6,"Drillfield Drive"],[339.3,217.9,"Drillfield Drive"],[342.8,222,"Drillfield Drive"],[303.1,167.1,"Stanger Street"],[304,148.5,"Stanger Street"],[304,140.3,"Stanger Street"],[302.6,136.2,"Stanger Street"],[298.2,178.5,"Drillfield Drive"],[295.1,181.9,"Drillfield Drive"],[293.6,186.6,"Drillfield Drive"],[533.3,140,"College Avenue"],[526.4,145.5,"College Avenue"],[543,132.3,"College Avenue"],[533.3,140,"College Avenue"],[516.2,153.5,"College Avenue"],[508.9,159.3,"College Avenue"],[500.6,165.8,"College Avenue"],[526.4,145.5,"College Avenue"],[516.2,153.5,"College Avenue"],[673,343.4,"Draper Road"],[670.5,339.3,"Draper Road"],[653.8,317,"Draper Road"],[644.9,305.8,"Draper Road"],[643.4,304.1,"Washington Street"],[647,301.1,"Washington Street"],[672.6,279.2,"Washington Street"],[384.8,277.3,"Kent Street"],[378.2,269.7,"Kent Street"],[436.4,290.7,"Kent Street"],[426.5,290.2,"Kent Street"],[414.4,290.7,"Kent Street"],[409.2,290.2,"Kent Street"],[405.8,289.5,"Kent Street"],[400.5,287.7,"Kent Street"],[400.5,287.7,"Kent Street"],[395.2,285.2,"Kent Street"],[390.1,281.7,"Kent Street"],[384.8,277.3,"Kent Street"],[486.8,339.7,"Kent Street"],[480.7,331.4,"Kent Street"],[459.8,303.6,"Kent Street"],[458.4,302.3,"Kent Street"],[454,298.5,"Kent Street"],[446,293.8,"Kent Street"],[436.4,290.7,"Kent Street"],[534,396,"Washington Street"],[536.9,393.5,"Washington Street"],[561.2,372.6,"Washington Street"],[573.8,361.8,"Washington Street"],[643.4,304.1,"Draper Road"],[639.4,299.7,"Draper Road"],[627.8,288,"Draper Road"],[613.3,272.2,"Draper Road"],[609.7,267.9,"Draper Road"],[607.6,265.6,"Draper Road"],[594.3,250.5,"Draper Road"],[570.6,225.1,"Draper Road"],[550.5,202.6,"Draper Road"],[545.8,197.3,"Draper Road"],[544.9,196.3,"Draper Road"],[541.7,193.1,"Draper Road"],[594.3,250.5,"Draper Road"],[591.2,247.1,"Draper Road"],[585.3,240.6,"Draper Road"],[579.1,233.7,"Draper Road"],[575.5,230.2,"Draper Road"],[573.8,361.8,"Washington Street"],[587,350.8,"Washington Street"],[603.2,337.5,"Washington Street"],[639,307.8,"Washington Street"],[643.4,304.1,"Washington Street"],[399,513.9,"Washington Street"],[405.6,508.1,"Washington Street"],[411.7,502.7,"Washington Street"],[150.2,390.6,"Drillfield Drive"],[159.6,385.3,"Drillfield Drive"],[167.3,382.1,"Drillfield Drive"],[173.8,380.3,"Drillfield Drive"],[180,379.4,"Drillfield Drive"],[180,379.4,"Drillfield Drive"],[181.4,379.3,"Drillfield Drive"],[184,379.3,"Drillfield Drive"],[315.9,312,"Drillfield Drive"],[336.9,290.6,"Drillfield Drive"],[345.6,279.4,"Drillfield Drive"],[302.1,170.3,"Stanger Street"],[301,173.2,"Stanger Street"],[299.8,175.9,"Stanger Street"],[323.9,199.7,"Drillfield Drive"],[316.2,189.3,"Drillfield Drive"],[311.1,182.5,"Drillfield Drive"],[308.4,179,"Drillfield Drive"],[293.6,186.6,"Drillfield Drive"],[294.3,191.6,"Drillfield Drive"],[297.3,195.2,"Drillfield Drive"],[345.4,-11.4,"Barger Street"],[335.1,17.2,"Barger Street"],[333.4,21.5,"Barger Street"],[317.7,16,"Turner Street Northwest"],[286.3,5.3,"Turner Street Northwest"],[279.7,3.1,"Turner Street Northwest"],[257.6,-4.3,"Turner Street Northwest"],[251.4,-6.4,"Turner Street Northwest"],[245.9,-8.2,"Turner Street Northwest"],[201,-23.8,"Turner Street Northwest"],[196.8,-28.2,"Turner Street Northwest"],[418.5,163,"Alumni Mall"],[443.7,143.8,"Alumni Mall"],[491.2,107.7,"Alumni Mall"],[508.4,94.7,"Alumni Mall"],[464.9,21,"North Main Street"],[451.6,8.5,"North Main Street"],[450.8,7.7,"North Main Street"],[446.3,3.3,"North Main Street"],[350.9,242,"Drillfield Drive"],[351.7,249.8,"Drillfield Drive"],[351.7,254.9,"Drillfield Drive"],[351.4,261.1,"Drillfield Drive"],[351.7,265,"Drillfield Drive"],[354.4,269.5,"Drillfield Drive"],[302.6,136.2,"Stanger Street"],[281.6,111,"Stanger Street"],[271.3,98.8,"Stanger Street"],[372.5,198,"Alumni Mall"],[375.7,195.6,"Alumni Mall"],[379.1,193,"Alumni Mall"],[381.2,191.3,"Alumni Mall"],[386.7,187.2,"Alumni Mall"],[389.5,185.1,"Alumni Mall"],[403.8,174.1,"Alumni Mall"],[374,186.3,"Alumni Mall"],[370.5,189,"Alumni Mall"],[367.5,191.3,"Alumni Mall"],[348,206.1,"Alumni Mall"],[341.9,210.8,"Alumni Mall"],[340.1,212.1,"Alumni Mall"],[336.8,214.6,"Alumni Mall"],[161,21.4,"Stanger Street"],[163.5,22.7,"Stanger Street"],[165.6,23.7,"Stanger Street"],[138.8,2.4,"Stanger Street"],[146,11.4,"Stanger Street"],[519,83.9,"North Main Street"],[525.5,94.9,"North Main Street"],[533.5,107.9,"North Main Street"],[535.1,103.3,"North Main Street"],[524.1,84.7,"North Main Street"],[520.6,78.3,"North Main Street"],[548.1,123,"North Main Street"],[546.9,120.6,"North Main Street"],[541.3,113.1,"North Main Street"],[535.1,103.3,"North Main Street"],[520.6,78.3,"North Main Street"],[513.1,67.5,"North Main Street"],[501.5,53.7,"North Main Street"],[498.7,53.9,"North Main Street"],[498.4,53.6,"North Main Street"],[496.4,51.7,"North Main Street"],[496.4,51.7,"North Main Street"],[486.3,41.9,"North Main Street"],[477.6,33.4,"North Main Street"],[464.9,21,"North Main Street"],[446.3,3.3,"North Main Street"],[442.1,-0.7,"North Main Street"],[432.4,-10.1,"North Main Street"],[498.9,56,"North Main Street"],[509.9,69.1,"North Main Street"],[512.4,72.9,"North Main Street"],[446.3,3.3,"Turner Street Northeast"],[451.1,-1.1,"Turner Street Northeast"],[459.8,-10.3,"Turner Street Northeast"],[446.3,3.3,"Turner Street Northwest"],[442.9,6.4,"Turner Street Northwest"],[440.5,8.6,"Turner Street Northwest"],[428.4,19.3,"Turner Street Northwest"],[613.6,131,"Church Street"],[616.2,134.1,"Church Street"],[625,144.4,"Church Street"],[635.4,156.6,"Church Street"],[644.3,167,"Church Street"],[579.2,161.5,"North Main Street"],[577.8,159.8,"North Main Street"],[567.4,148.1,"North Main Street"],[590.4,175.1,"North Main Street"],[585.3,168.7,"North Main Street"],[579.2,161.5,"North Main Street"],[611.3,200.2,"North Main Street"],[606.1,194.1,"North Main Street"],[593.3,178.6,"North Main Street"],[590.4,175.1,"North Main Street"],[596.1,213,"Roanoke Street"],[606.3,204.5,"Roanoke Street"],[611.3,200.2,"Roanoke Street"],[611.3,200.2,"Roanoke Street"],[613.6,198.3,"Roanoke Street"],[616.7,195.6,"Roanoke Street"],[628.7,185.2,"Roanoke Street"],[611.3,200.2,"South Main Street"],[615,204.6,"South Main Street"],[630,222.7,"South Main Street"],[630,222.7,"South Main Street"],[632.9,226.2,"South Main Street"],[641.2,236.1,"South Main Street"],[643.4,238.7,"South Main Street"],[658.6,256.7,"South Main Street"],[671.6,272.2,"South Main Street"],[673.1,273.9,"South Main Street"],[675.6,276.6,"South Main Street"],[675.6,276.6,"South Main Street"],[678.2,279.5,"South Main Street"],[679.3,280.8,"South Main Street"],[691.2,294.4,"South Main Street"],[691.2,294.4,"South Main Street"],[703.1,308.7,"South Main Street"],[707.7,314.3,"South Main Street"],[93.1,5.1,"Prices Fork Road"],[110.6,-5.7,"Prices Fork Road"],[80.7,13.2,"Prices Fork Road"],[93.1,5.1,"Prices Fork Road"],[53.2,23.2,"Prices Fork Road"],[26.5,39.8,"Prices Fork Road"],[-0.4,56.9,"Prices Fork Road"],[81.7,5.2,"Prices Fork Road"],[53.2,23.2,"Prices Fork Road"],[55.9,28.7,"Prices Fork Road"],[80.7,13.2,"Prices Fork Road"],[24.7,48,"Prices Fork Road"],[55.9,28.7,"Prices Fork Road"],[59,279.1,"West Campus Drive"],[50,265,"West Campus Drive"],[23.6,224,"West Campus Drive"],[14.3,209.8,"West Campus Drive"],[13.1,207.7,"West Campus Drive"],[9.8,202.3,"West Campus Drive"],[9.8,202.3,"West Campus Drive"],[6.7,198,"West Campus Drive"],[5.6,196.4,"West Campus Drive"],[-0.1,187,"West Campus Drive"],[-37.7,82.2,"Prices Fork Road"],[-25.7,77.9,"Prices Fork Road"],[-10.5,70.3,"Prices Fork Road"],[821.2,444.3,"South Main Street"],[828.1,452.2,"South Main Street"],[843.3,469.6,"South Main Street"],[805,425.7,"South Main Street"],[813.6,435.5,"South Main Street"],[821.2,444.3,"South Main Street"],[791.3,410.4,"South Main Street"],[805,425.7,"South Main Street"],[777.7,394.5,"South Main Street"],[780,397.1,"South Main Street"],[781,398.2,"South Main Street"],[791.3,410.4,"South Main Street"],[755,368.4,"South Main Street"],[765.4,380.3,"South Main Street"],[770.3,385.9,"South Main Street"],[716.4,110.8,"Wharton Street"],[746.7,146.3,"Wharton Street"],[749.2,149.2,"Wharton Street"],[505.1,324.1,"Wall Street"],[523,308.8,"Wall Street"],[525.9,304.9,"Wall Street"],[681.6,140.2,"Penn Street"],[662.1,117.7,"Penn Street"],[647.4,101,"Penn Street"],[403.8,174.1,"Alumni Mall"],[418.5,163,"Alumni Mall"],[342.8,222,"Drillfield Drive"],[345.5,225.7,"Drillfield Drive"],[298.3,195.9,"Drillfield Drive"],[302.4,197,"Drillfield Drive"],[307.9,197.6,"Drillfield Drive"],[316,199.8,"Drillfield Drive"],[321.1,201.9,"Drillfield Drive"],[67.6,504.9,"Grove Lane"],[69,498.6,"Grove Lane"],[70.8,492.5,"Grove Lane"],[72.7,488.8,"Grove Lane"],[80.1,480.3,"Grove Lane"],[93.6,467.6,"Grove Lane"],[102.6,459.6,"Grove Lane"],[112.6,452.8,"Grove Lane"],[122.6,447.6,"Grove Lane"],[135.7,442.4,"Grove Lane"],[96.5,338.3,"West Campus Drive"],[94.6,334.7,"West Campus Drive"],[92.2,330.6,"West Campus Drive"],[90.3,327.6,"West Campus Drive"],[519,83.9,"Alumni Mall"],[520.6,78.3,"Alumni Mall"],[516,78.8,"North Main Street"],[517.9,82,"North Main Street"],[519,83.9,"North Main Street"],[151.8,330.3,"Drillfield Drive"],[152.1,337.2,"Drillfield Drive"],[155.4,345.7,"Drillfield Drive"],[165.6,362.7,"Drillfield Drive"],[173.8,372.1,"Drillfield Drive"],[184,379.3,"Drillfield Drive"],[356.2,270.6,"Drillfield Drive"],[359.9,271.2,"Drillfield Drive"],[363.8,270.5,"Drillfield Drive"],[367.1,269.1,"Drillfield Drive"],[354.8,240.3,"Drillfield Drive"],[353,238,"Drillfield Drive"],[350.8,232.8,"Drillfield Drive"],[349.1,229.4,"Drillfield Drive"],[308.4,179,"Drillfield Drive"],[304.3,177.3,"Drillfield Drive"],[300.4,177.7,"Drillfield Drive"],[129.1,426.5,"West Campus Drive"],[123.3,409,"West Campus Drive"],[121.1,402.9,"West Campus Drive"],[482.6,440.7,"Washington Street"],[510.1,416.7,"Washington Street"],[531.7,397.9,"Washington Street"],[370.6,260.8,"Drillfield Drive"],[368.8,258.1,"Drillfield Drive"],[357.7,244.1,"Drillfield Drive"],[354.8,240.3,"Drillfield Drive"],[333.8,210.7,"Drillfield Drive"],[336.8,214.6,"Drillfield Drive"],[121.1,402.9,"West Campus Drive"],[115.8,388.5,"West Campus Drive"],[520.6,78.3,"Alumni Mall"],[516,78.8,"Alumni Mall"],[376.2,184.5,"Alumni Mall"],[374,186.3,"Alumni Mall"],[379.1,193,"Alumni Mall"],[381.2,191.3,"Alumni Mall"],[177,30.6,"Stanger Street"],[180.8,33.2,"Stanger Street"],[181.4,33.6,"Stanger Street"],[212.7,39.7,"Stanger Street"],[210.7,38.7,"Stanger Street"],[203,42,"Stanger Street"],[206.7,42.2,"Stanger Street"],[209.4,42.8,"Stanger Street"],[191,26.8,"Stanger Street"],[184.1,27.2,"Stanger Street"],[514.5,475.7,"Clay Street"],[527.7,464.7,"Clay Street"],[535.9,457.9,"Clay Street"],[557.2,440.1,"Clay Street"],[333.8,210.7,"Drillfield Drive"],[331.7,208.5,"Drillfield Drive"],[327.5,204.4,"Drillfield Drive"],[324,201.9,"Drillfield Drive"],[735.2,345.6,"South Main Street"],[755,368.4,"South Main Street"],[126.8,353.8,"Drillfield Drive"],[111.7,362.2,"Drillfield Drive"],[107.1,364.3,"Drillfield Drive"],[184,379.3,"Drillfield Drive"],[188.8,381.5,"Drillfield Drive"],[195.4,383.6,"Drillfield Drive"],[208.3,384.8,"Drillfield Drive"],[217.1,384.4,"Drillfield Drive"],[226.9,382,"Drillfield Drive"],[762.6,268.8,"Church Street"],[766.8,273.6,"Church Street"],[793.6,304.9,"Church Street"],[797.6,309.5,"Church Street"],[800.9,313.4,"Church Street"],[826.5,343.3,"Church Street"],[830.4,347.9,"Church Street"],[797.6,309.5,"Midtown Way"],[802.6,305.2,"Midtown Way"],[857,258.1,"Midtown Way"],[860,255.5,"Belvedere Avenue"],[863.5,259.5,"Belvedere Avenue"],[881.7,280.7,"Belvedere Avenue"],[890.5,290.9,"Belvedere Avenue"],[156.7,19.2,"Stanger Street"],[161,21.4,"Stanger Street"],[151.4,15.5,"Stanger Street"],[156.7,19.2,"Stanger Street"],[510.4,284.4,"Otey Street"],[498.2,268.1,"Otey Street"],[493.4,261.8,"Otey Street"],[646.7,169.8,"Roanoke Street"],[658.5,159.8,"Roanoke Street"],[679.9,141.7,"Roanoke Street"],[679.1,208,"Lee Street"],[682.3,205.3,"Lee Street"],[704.6,186.9,"Lee Street"],[714.8,178.5,"Lee Street"],[643.4,238.7,"Lee Street"],[647.3,235.4,"Lee Street"],[665.2,220,"Lee Street"],[676.4,210.3,"Lee Street"],[712,245.7,"Washington Street"],[714.8,243.3,"Washington Street"],[732.1,228.4,"Washington Street"],[744.3,217.9,"Washington Street"],[673,343.4,"Clay Street"],[677,340.1,"Clay Street"],[682.9,335.1,"Clay Street"],[692.2,383.1,"Draper Road"],[689.8,378.8,"Draper Road"],[685.5,370.5,"Draper Road"],[681,359.3,"Draper Road"],[539.2,10.3,"Faculty Street"],[541.8,7.6,"Faculty Street"],[556,-8.6,"Faculty Street"],[692.2,383.1,"Miller Street"],[696.2,379.6,"Miller Street"],[710.5,367.3,"Miller Street"],[718.4,360.2,"Miller Street"],[731.4,349,"Miller Street"],[735.2,345.6,"Miller Street"],[634.6,483,"Harrell Street"],[629.4,475.8,"Harrell Street"],[616.8,460.1,"Harrell Street"],[615,457.8,"Harrell Street"],[605.1,445.7,"Harrell Street"],[598.8,438.1,"Harrell Street"],[591.1,429,"Harrell Street"],[582.4,418.6,"Harrell Street"],[565.6,433.1,"Clay Street"],[569.4,429.9,"Clay Street"],[579.7,420.9,"Clay Street"],[582.4,418.6,"Clay Street"],[607.5,397.5,"Clay Street"],[633.4,376.2,"Clay Street"],[508.4,94.7,"Alumni Mall"],[516.1,88.8,"Alumni Mall"],[517.3,87.8,"Alumni Mall"],[519,83.9,"Alumni Mall"],[367.5,191.3,"Alumni Mall"],[348,206.1,"Alumni Mall"],[376.5,42.4,"Turner Street Northwest"],[363.4,33.7,"Turner Street Northwest"],[350.9,28.1,"Turner Street Northwest"],[343.1,25.1,"Turner Street Northwest"],[317.7,16,"Turner Street Northwest"],[428.4,19.3,"Turner Street Northwest"],[425.5,21.8,"Turner Street Northwest"],[417.3,29,"Turner Street Northwest"],[403.2,41.3,"Turner Street Northwest"],[367.1,269.1,"Drillfield Drive"],[369.3,265.8,"Drillfield Drive"],[370.2,263.3,"Drillfield Drive"],[370.6,260.8,"Drillfield Drive"],[367.1,269.1,"Kent Street"],[369.5,268.8,"Kent Street"],[372.3,262.4,"Kent Street"],[370.6,260.8,"Kent Street"],[352.3,272,"Drillfield Drive"],[356.2,270.6,"Drillfield Drive"],[349.1,229.4,"Drillfield Drive"],[345.5,225.7,"Drillfield Drive"],[345.5,225.7,"Drillfield Drive"],[346.8,230.4,"Drillfield Drive"],[324,201.9,"Drillfield Drive"],[323.9,199.7,"Drillfield Drive"],[321.1,201.9,"Drillfield Drive"],[324,201.9,"Drillfield Drive"],[299.8,175.9,"Stanger Street"],[298.2,178.5,"Stanger Street"],[303.1,167.1,"Stanger Street"],[302.1,170.3,"Stanger Street"],[304,170.4,"Stanger Street"],[303.1,167.1,"Stanger Street"],[308.4,179,"Stanger Street"],[306.6,175.9,"Stanger Street"],[218.4,46.9,"Stanger Street"],[224,48.4,"Stanger Street"],[209.4,42.8,"Stanger Street"],[218.4,46.9,"Stanger Street"],[196.6,42.4,"Stanger Street"],[203,42,"Stanger Street"],[204.8,35.3,"Stanger Street"],[201.1,31.8,"Stanger Street"],[210.7,38.7,"Stanger Street"],[207.8,37.2,"Stanger Street"],[205.3,35.6,"Stanger Street"],[204.8,35.3,"Stanger Street"],[224,48.4,"Stanger Street"],[219.6,43.3,"Stanger Street"],[168.9,23.6,"Stanger Street"],[165.6,23.7,"Stanger Street"],[178.2,27.2,"Stanger Street"],[168.9,23.6,"Stanger Street"],[184.1,27.2,"Stanger Street"],[178.2,27.2,"Stanger Street"],[181.4,33.6,"Stanger Street"],[183.7,35.7,"Stanger Street"],[185,37.5,"Stanger Street"],[167.6,26.5,"Stanger Street"],[177,30.6,"Stanger Street"],[165.6,23.7,"Stanger Street"],[167.6,26.5,"Stanger Street"],[293.6,186.6,"Drillfield Drive"],[291.9,190.9,"Drillfield Drive"],[280.6,200.8,"Drillfield Drive"],[272.2,205.5,"Drillfield Drive"],[259.2,215.5,"Drillfield Drive"],[236.7,234.7,"Drillfield Drive"],[216.4,253.4,"Drillfield Drive"],[199.5,267.8,"Drillfield Drive"],[177.1,287.8,"Drillfield Drive"],[169.2,295.9,"Drillfield Drive"],[346.8,230.4,"Drillfield Drive"],[348.4,234.7,"Drillfield Drive"],[350,238,"Drillfield Drive"],[350.9,242,"Drillfield Drive"],[244.9,121.6,"Old Turner Street"],[250.5,118,"Old Turner Street"],[260.5,109.3,"Old Turner Street"],[243.5,124.1,"Old Turner Street"],[244.9,121.6,"Old Turner Street"],[242,121.1,"Old Turner Street"],[569.6,265.9,"Wall Street"],[585.9,251.5,"Wall Street"],[591.2,247.1,"Wall Street"],[575.5,230.2,"Roanoke Street"],[579.2,227.1,"Roanoke Street"],[591.7,216.7,"Roanoke Street"],[542.4,101,"College Avenue Extension"],[540.3,98.5,"College Avenue Extension"],[534.9,92.3,"College Avenue Extension"],[552.5,113.4,"College Avenue Extension"],[548.8,108.7,"College Avenue Extension"],[542.4,101,"College Avenue Extension"],[500.6,165.8,"College Avenue"],[488.9,175.1,"College Avenue"],[470.2,189.9,"College Avenue"],[470.2,189.9,"College Avenue"],[455.9,201.2,"College Avenue"],[454.3,204.2,"College Avenue"],[453.8,207.1,"College Avenue"],[492,259.8,"Otey Street"],[477.4,240.3,"Otey Street"],[470,230,"Otey Street"],[465.6,226,"Otey Street"],[525.9,304.9,"Otey Street"],[524.4,303,"Otey Street"],[510.4,284.4,"Otey Street"],[486.8,339.7,"Wall Street"],[505.1,324.1,"Wall Street"],[376,270.1,"Kent Street"],[378.2,269.7,"Kent Street"],[378.2,269.7,"Kent Street"],[377.8,267.3,"Kent Street"],[555.9,70.3,"Wilson Avenue"],[569.8,51.3,"Wilson Avenue"],[570.5,50.2,"Wilson Avenue"],[571.9,48.1,"Wilson Avenue"],[589.3,153.4,"Jackson Street"],[595.5,147.8,"Jackson Street"],[597.9,145.6,"Jackson Street"],[579.2,161.5,"Jackson Street"],[581.7,160.1,"Jackson Street"],[589.3,153.4,"Jackson Street"],[352.6,213.4,"Alumni Mall"],[372.5,198,"Alumni Mall"],[485.2,100.2,"Alumni Mall"],[469.9,112.4,"Alumni Mall"],[469.9,112.4,"Alumni Mall"],[462,118.7,"Alumni Mall"],[454.1,124.7,"Alumni Mall"],[413.3,156,"Alumni Mall"],[381.4,180.3,"Alumni Mall"],[376.2,184.5,"Alumni Mall"],[454.1,124.7,"Alumni Mall"],[432.7,141.1,"Alumni Mall"],[413.3,156,"Alumni Mall"],[762.6,268.8,"Clay Street"],[766.5,265.2,"Clay Street"],[794.6,240,"Clay Street"],[808.8,227.2,"Clay Street"],[662.8,188.4,"Church Street"],[676.7,205.1,"Church Street"],[677.2,205.7,"Church Street"],[679.1,208,"Church Street"],[679.1,208,"Church Street"],[681.4,210.6,"Church Street"],[709.8,243.1,"Church Street"],[712,245.7,"Church Street"],[719.2,254.2,"Church Street"],[724.4,260.4,"Church Street"],[734.8,273.3,"Church Street"],[741.3,280.8,"Church Street"],[744.4,284.2,"Church Street"],[628.7,185.2,"Roanoke Street"],[636.5,178.6,"Roanoke Street"],[644.4,171.8,"Roanoke Street"],[646.7,169.8,"Roanoke Street"],[686.9,267,"Washington Street"],[689.5,264.7,"Washington Street"],[694.5,260.5,"Washington Street"],[681,359.3,"Draper Road"],[675,347.2,"Draper Road"],[673,343.4,"Draper Road"],[682.9,335.1,"Clay Street"],[694.3,325.6,"Clay Street"],[694.3,325.6,"Clay Street"],[701.4,319.7,"Clay Street"],[705.1,316.5,"Clay Street"],[707.7,314.3,"Clay Street"],[723,301.8,"Clay Street"],[741.6,286.5,"Clay Street"],[747.2,281.9,"Clay Street"],[707.7,314.3,"Clay Street"],[710.6,312,"Clay Street"],[712.3,310.5,"Clay Street"],[723,301.8,"Clay Street"],[675.6,276.6,"Washington Street"],[678.1,274.4,"Washington Street"],[681.5,271.5,"Washington Street"],[686.9,267,"Washington Street"],[467.8,453.5,"Washington Street"],[468.8,452.6,"Washington Street"],[474.5,447.6,"Washington Street"],[482.6,440.7,"Washington Street"],[568.9,543.3,"Houston Street"],[578.2,534.6,"Houston Street"],[584.5,528.9,"Houston Street"],[597.7,516.4,"Houston Street"],[553.1,558.2,"Houston Street"],[557.9,553.6,"Houston Street"],[568.9,543.3,"Houston Street"],[557.2,440.1,"Clay Street"],[563.8,434.6,"Clay Street"],[565.6,433.1,"Clay Street"],[734.6,433.3,"Eheart Street"],[737,431.1,"Eheart Street"],[756.7,413.4,"Eheart Street"],[756.7,413.4,"Eheart Street"],[774.4,397.6,"Eheart Street"],[777.7,394.5,"Eheart Street"],[691.5,471.7,"Preston Avenue"],[688.4,468.2,"Preston Avenue"],[653.7,429,"Preston Avenue"],[649.4,425.2,"Preston Avenue"],[734.6,433.3,"Draper Road"],[732.5,430.9,"Draper Road"],[695.8,388.8,"Draper Road"],[692.2,383.1,"Draper Road"],[852.3,329,"Eheart Street"],[893,293.8,"Eheart Street"],[906.3,283,"Eheart Street"],[908.6,281.1,"Eheart Street"],[830.4,347.9,"Eheart Street"],[852.3,329,"Eheart Street"],[908.6,281.1,"Eheart Street"],[950.3,246.6,"Eheart Street"],[988.8,213.3,"Eheart Street"],[758.6,272.1,"Clay Street"],[762.6,268.8,"Clay Street"],[549.2,126.7,"North Main Street"],[548.1,123,"North Main Street"],[545.7,125.2,"North Main Street"],[549.2,126.7,"North Main Street"],[498.7,53.9,"North Main Street"],[498.9,56,"North Main Street"],[501.5,53.7,"North Main Street"],[498.7,53.9,"North Main Street"],[27.3,185.5,"Orange Loop"],[32.9,179.7,"Orange Loop"],[345.6,279.4,"Drillfield Drive"],[346.5,277.7,"Drillfield Drive"],[348.1,275.6,"Drillfield Drive"],[348.9,274.8,"Drillfield Drive"],[163.3,303,"Drillfield Drive"],[158.4,310.6,"Drillfield Drive"],[155.6,317.1,"Drillfield Drive"],[152.4,326.3,"Drillfield Drive"],[444.3,474,"Washington Street"],[467.8,453.5,"Washington Street"],[425.7,490.4,"Washington Street"],[431.6,485.2,"Washington Street"],[436.6,480.7,"Washington Street"],[444.3,474,"Washington Street"],[411.7,502.7,"Washington Street"],[425.7,490.4,"Washington Street"],[389.4,522.3,"Washington Street"],[394.7,517.6,"Washington Street"],[399,513.9,"Washington Street"],[376.2,533.8,"Washington Street"],[382,528.7,"Washington Street"],[389.4,522.3,"Washington Street"],[366.9,541.9,"Washington Street"],[370.3,538.9,"Washington Street"],[376.2,533.8,"Washington Street"],[338,567.2,"Washington Street"],[341.4,564.2,"Washington Street"],[342.5,563.3,"Washington Street"],[366.9,541.9,"Washington Street"],[115.8,388.5,"West Campus Drive"],[111.8,377.6,"West Campus Drive"],[182.9,544.9,"West Campus Drive"],[180.2,537.9,"West Campus Drive"],[171.3,514.2,"West Campus Drive"],[186.7,554.7,"West Campus Drive"],[182.9,544.9,"West Campus Drive"],[64,287,"West Campus Drive"],[59,279.1,"West Campus Drive"],[83.4,316.8,"West Campus Drive"],[75.8,305.1,"West Campus Drive"],[90.3,327.6,"West Campus Drive"],[83.4,316.8,"West Campus Drive"],[100.7,348.1,"West Campus Drive"],[97.8,341.3,"West Campus Drive"],[96.5,338.3,"West Campus Drive"],[103.1,354.1,"West Campus Drive"],[100.7,348.1,"West Campus Drive"],[107.1,364.3,"West Campus Drive"],[104.4,357.4,"West Campus Drive"],[103.1,354.1,"West Campus Drive"],[75.8,305.1,"West Campus Drive"],[64,287,"West Campus Drive"],[111.8,377.6,"West Campus Drive"],[107.1,364.3,"West Campus Drive"],[158.5,480,"West Campus Drive"],[156.7,476.1,"West Campus Drive"],[154.1,471.1,"West Campus Drive"],[171.3,514.2,"West Campus Drive"],[165.7,499.1,"West Campus Drive"],[158.5,480,"West Campus Drive"],[135.7,442.4,"West Campus Drive"],[129.1,426.5,"West Campus Drive"],[600.9,550.1,"Center Street"],[596.9,544.2,"Center Street"],[584.5,528.9,"Center Street"],[597.7,516.4,"Houston Street"],[605.2,509.4,"Houston Street"],[609.4,505.5,"Houston Street"],[575.5,230.2,"Draper Road"],[572.1,226.8,"Draper Road"],[570.8,225.4,"Draper Road"],[570.6,225.1,"Draper Road"],[219.6,43.3,"Perry Street"],[220.9,37.9,"Perry Street"],[219.6,43.3,"Stanger Street"],[212.7,39.7,"Stanger Street"],[220.9,37.9,"Perry Street"],[217.2,39,"Perry Street"],[212.7,39.7,"Perry Street"],[225.2,34,"Perry Street"],[221.8,37,"Perry Street"],[220.9,37.9,"Perry Street"],[777.9,482.6,"Draper Road"],[775.7,480.2,"Draper Road"],[736.4,435.4,"Draper Road"],[821.4,532.2,"Draper Road"],[780.2,485.2,"Draper Road"],[777.9,482.6,"Draper Road"],[864.3,582.3,"Draper Road"],[862.2,579.8,"Draper Road"],[821.4,532.2,"Draper Road"],[770.3,385.9,"South Main Street"],[772.2,388.1,"South Main Street"],[773.2,389.3,"South Main Street"],[777.7,394.5,"South Main Street"],[636.7,486.9,"Harrell Street"],[636.6,486.6,"Harrell Street"],[634.6,483,"Harrell Street"],[565.6,433.1,"Kent Street"],[562.9,430,"Kent Street"],[536.5,399.2,"Kent Street"],[534,396,"Kent Street"],[612.4,265.4,"Lee Street"],[609.7,267.9,"Lee Street"],[838.3,7.5,"Roanoke Street"],[857.3,-9.1,"Roanoke Street"],[859.7,-13.3,"Roanoke Street"],[809.3,32.1,"Roanoke Street"],[826.2,17.8,"Roanoke Street"],[838.3,7.5,"Roanoke Street"],[534.9,92.3,"Wilson Avenue"],[536.9,90.4,"Wilson Avenue"],[615,457.8,"Miller Street"],[617.3,455.9,"Miller Street"],[618.2,455.1,"Miller Street"],[637.4,438.4,"Miller Street"],[637.4,438.4,"Miller Street"],[642.4,433.9,"Miller Street"],[647,429.1,"Miller Street"],[649.4,425.2,"Miller Street"],[67.6,504.9,"Grove Lane"],[63.7,510.7,"Grove Lane"],[59.3,514.9,"Grove Lane"],[271.3,98.8,"Old Turner Street"],[273.9,94.6,"Old Turner Street"],[274.4,94,"Old Turner Street"],[781.1,186,"Wharton Street"],[799.9,208.4,"Wharton Street"],[809.4,219.2,"Wharton Street"],[812.8,223.5,"Wharton Street"],[681.6,140.2,"Roanoke Street"],[716.4,110.8,"Roanoke Street"],[714.8,178.5,"Lee Street"],[746.8,151.2,"Lee Street"],[747.5,150.6,"Lee Street"],[749.2,149.2,"Lee Street"],[746.3,216.2,"Penn Street"],[765.2,239,"Penn Street"],[778.3,254.8,"Penn Street"],[746.3,216.2,"Washington Street"],[764.5,200.4,"Washington Street"],[764.5,200.4,"Washington Street"],[778.6,188.2,"Washington Street"],[781.1,186,"Washington Street"],[700.3,161.7,"Penn Street"],[712.3,175.6,"Penn Street"],[714.8,178.5,"Penn Street"],[683.2,71.1,"Jackson Street"],[702.5,54.5,"Jackson Street"],[703.9,51.5,"Jackson Street"],[632.7,113.4,"Jackson Street"],[634.5,111.9,"Jackson Street"],[635,111.5,"Jackson Street"],[647.4,101,"Jackson Street"],[908.6,281.1,"Palmer Drive"],[920.3,294.7,"Palmer Drive"],[934.8,311.5,"Palmer Drive"],[995.9,380.1,"Hemlock Drive"],[940.5,428.5,"Hemlock Drive"],[915.9,450.1,"Hemlock Drive"],[905.3,459.4,"Hemlock Drive"],[931.8,57.8,"Washington Street"],[972.5,23.6,"Washington Street"],[1008,-6.2,"Washington Street"],[972.8,107.3,"Clay Street"],[996.9,87.1,"Clay Street"],[1019.7,68,"Clay Street"],[1048.6,43.5,"Clay Street"],[946.1,130.5,"Clay Street"],[958.8,119.4,"Clay Street"],[835.1,208.9,"Clay Street"],[851.5,201.9,"Clay Street"],[873,192.2,"Clay Street"],[880.5,186.7,"Clay Street"],[895.3,173.9,"Clay Street"],[930.1,144.3,"Clay Street"],[812.8,223.5,"Clay Street"],[819.7,217.9,"Clay Street"],[828.4,212.4,"Clay Street"],[860,255.5,"Midtown Way"],[863.3,252.6,"Midtown Way"],[864.3,251.7,"Midtown Way"],[897.6,222.9,"Midtown Way"],[749.2,149.2,"Lee Street"],[768.1,133.2,"Lee Street"],[842.8,70.1,"Lee Street"],[905.3,459.4,"Hemlock Drive"],[888.5,474.1,"Hemlock Drive"],[885.8,476.4,"Hemlock Drive"],[885.8,476.4,"Hemlock Drive"],[869.1,491,"Hemlock Drive"],[868,491.8,"Hemlock Drive"],[864.8,494.3,"Hemlock Drive"],[884.4,435.7,"Church Street"],[902.2,455.9,"Church Street"],[905.3,459.4,"Church Street"],[886,563.2,"Edgewood Lane"],[903.9,546.8,"Edgewood Lane"],[905,545.9,"Edgewood Lane"],[907.7,543.4,"Edgewood Lane"],[864.8,494.3,"Hemlock Drive"],[860.8,497.3,"Hemlock Drive"],[848.2,508.5,"Hemlock Drive"],[824.1,529.8,"Hemlock Drive"],[821.4,532.2,"Hemlock Drive"],[777.9,482.6,"Eakin Street"],[774.9,485.5,"Eakin Street"],[737.1,518.6,"Eakin Street"],[734.4,521.1,"Eakin Street"],[821.2,444.3,"Eakin Street"],[817.7,447.5,"Eakin Street"],[799.4,463.6,"Eakin Street"],[780.2,480.5,"Eakin Street"],[571.9,48.1,"Progress Street"],[583.1,59.4,"Progress Street"],[594,69.9,"Progress Street"],[539.2,10.3,"Progress Street"],[540.6,11.8,"Progress Street"],[569.8,45.8,"Progress Street"],[571.9,48.1,"Progress Street"],[486.3,-38.7,"Progress Street"],[489,-36.3,"Progress Street"],[539.2,10.3,"Progress Street"],[842.8,70.1,"Lee Street"],[850.5,63.6,"Lee Street"],[897.7,23.7,"Lee Street"],[900.9,21,"Prospect Street"],[903.5,24.2,"Prospect Street"],[928.2,53.6,"Prospect Street"],[931.8,57.8,"Prospect Street"],[958.8,119.4,"Clay Street"],[972.8,107.3,"Clay Street"],[930.1,144.3,"Clay Street"],[946.1,130.5,"Clay Street"],[931.8,57.8,"Prospect Street"],[952.8,83.1,"Prospect Street"],[956.4,87.5,"Prospect Street"],[970.6,104.6,"Prospect Street"],[665,15.5,"Bennett Street"],[660.8,13.2,"Bennett Street"],[635.2,-6.2,"Bennett Street"],[665,15.5,"Harding Avenue"],[667,14,"Harding Avenue"],[670,12.4,"Harding Avenue"],[689.6,4.4,"Harding Avenue"],[624.4,0.8,"Wilson Avenue"],[649.2,-19.5,"Wilson Avenue"],[658.9,-28.5,"Wilson Avenue"],[275.1,349.4,"Drillfield Drive"],[284.2,341.3,"Drillfield Drive"],[226.9,382,"Drillfield Drive"],[237.4,377.2,"Drillfield Drive"],[247.7,371.2,"Drillfield Drive"],[258.9,363,"Drillfield Drive"],[348.9,274.8,"Drillfield Drive"],[350.2,273.5,"Drillfield Drive"],[352.3,272,"Drillfield Drive"],[291.9,190.9,"Drillfield Drive"],[288.8,194.9,"Drillfield Drive"],[284.2,198.9,"Drillfield Drive"],[280.6,200.8,"Drillfield Drive"],[995.9,380.1,"Palmer Drive"],[1016.6,404.5,"Palmer Drive"],[1036.5,427.2,"Palmer Drive"],[1071.8,470.2,"Palmer Drive"],[21.5,191.5,"Orange Loop"],[27.3,185.5,"Orange Loop"],[9.8,202.3,"Orange Loop"],[16.1,196.9,"Orange Loop"],[17.2,196,"Orange Loop"],[21.5,191.5,"Orange Loop"],[271.3,98.8,"Stanger Street"],[264.1,90.2,"Stanger Street"],[253.3,77.3,"Stanger Street"],[312.5,315.5,"Drillfield Drive"],[315.9,312,"Drillfield Drive"],[284.2,341.3,"Drillfield Drive"],[310,317.9,"Drillfield Drive"],[312.5,315.5,"Drillfield Drive"],[907.7,543.4,"South Main Street"],[917.8,555,"South Main Street"],[945.7,586.9,"South Main Street"],[843.3,469.6,"South Main Street"],[862.4,491.6,"South Main Street"],[864.8,494.3,"South Main Street"],[734.4,521.1,"Preston Avenue"],[731.9,518.2,"Preston Avenue"],[693.9,474.4,"Preston Avenue"],[777.6,570.5,"Preston Avenue"],[736.9,523.9,"Preston Avenue"],[734.4,521.1,"Preston Avenue"],[658.8,500.1,"Eheart Street"],[688.4,474.4,"Eheart Street"],[689,473.9,"Eheart Street"],[691.5,471.7,"Eheart Street"],[734.4,521.1,"Eakin Street"],[731.8,523.4,"Eakin Street"],[694.1,556.4,"Eakin Street"],[806.8,368.6,"Eheart Street"],[817.2,359.5,"Eheart Street"],[817.2,359.5,"Eheart Street"],[827.9,350.1,"Eheart Street"],[830.4,347.9,"Eheart Street"],[861.8,410.1,"Church Street"],[864.2,412.8,"Church Street"],[864.8,413.5,"Church Street"],[884.4,435.7,"Church Street"],[861.8,410.1,"Eakin Street"],[837.3,430.6,"Eakin Street"],[833.4,433.9,"Eakin Street"],[896.5,379.8,"Eakin Street"],[861.8,410.1,"Eakin Street"],[951.8,330.5,"Eakin Street"],[949.6,332.4,"Eakin Street"],[934.5,345.8,"Eakin Street"],[911.8,366.1,"Eakin Street"],[833.4,433.9,"Eakin Street"],[825.1,440.8,"Eakin Street"],[824.2,441.6,"Eakin Street"],[821.2,444.3,"Eakin Street"],[951.8,330.5,"Palmer Drive"],[995.9,380.1,"Palmer Drive"],[912.9,398,"Penn Street"],[898.3,381.9,"Penn Street"],[896.5,379.8,"Penn Street"],[1034.8,346.2,"Hemlock Drive"],[998.3,378.1,"Hemlock Drive"],[995.9,380.1,"Hemlock Drive"],[992.2,296,"Kentwood Drive"],[1032.8,343.9,"Kentwood Drive"],[1034.8,346.2,"Kentwood Drive"],[950.3,246.6,"Kentwood Drive"],[953.2,250,"Kentwood Drive"],[992.2,296,"Kentwood Drive"],[988.8,213.3,"Willard Drive"],[1023.6,255,"Willard Drive"]];
+
   const ZONE_LABELS = [
     { label: 'Downtown', x: 560, y: 130 },
     { label: 'Virginia Tech Campus', x: 300, y: 470 },
@@ -5386,7 +5531,8 @@
       x: 700, y: 300,
       title: 'Tanker rollover — unidentified placard',
       zone: 'South Main Street',
-      question: 'placard requirements for a mixed load of unidentified corrosive cargo'
+      question: 'placard requirements for a mixed load of unidentified corrosive cargo',
+      responded: false
     },
     {
       category: 'CONFINED SPACE',
@@ -5394,7 +5540,8 @@
       x: 630, y: 170,
       title: 'Stormwater vault entry',
       zone: 'Downtown, near the Post Office',
-      question: 'minimum oxygen level for confined space entry'
+      question: 'minimum oxygen level for confined space entry',
+      responded: false
     },
     {
       category: 'EMS',
@@ -5402,7 +5549,8 @@
       x: 250, y: 300,
       title: 'Cardiac event — Drillfield',
       zone: 'The Drillfield, VT campus',
-      question: 'aspirin dose for suspected cardiac chest pain'
+      question: 'aspirin dose for suspected cardiac chest pain',
+      responded: true
     },
     {
       category: 'STRUCTURAL',
@@ -5410,18 +5558,20 @@
       x: 600, y: 230,
       title: 'Partial roof collapse — parking garage',
       zone: 'Downtown',
-      question: 'load rating for a partially collapsed parking structure'
+      question: 'load rating for a partially collapsed parking structure',
+      responded: false
     }
   ];
 
   function createMarker(incident) {
     const marker = document.createElement('button');
     marker.type = 'button';
-    marker.className = 'marker';
+    marker.className = 'marker' + (incident.responded ? ' responded' : '');
     marker.textContent = incident.glyph;
     marker.style.left = (incident.x / MAP_W * 100) + '%';
     marker.style.top = (incident.y / MAP_H * 100) + '%';
-    marker.setAttribute('aria-label', incident.category + ': ' + incident.title);
+    marker.setAttribute('aria-label', incident.category + ': ' + incident.title +
+      ' (' + (incident.responded ? 'responding' : 'not responded') + ')');
     marker.addEventListener('click', () => selectIncident(incident, marker));
     return marker;
   }
@@ -5434,6 +5584,7 @@
       seen.add(i.glyph);
       legendParts.push(i.glyph + ' ' + i.category);
     });
+    legendParts.push('red = not responded, green = responding');
     mapLegend.textContent = legendParts.join('  ·  ');
   }
 
@@ -5480,9 +5631,35 @@
     zoneLine.className = 'incident-zone';
     zoneLine.textContent = incident.zone;
 
+    const statusRow = document.createElement('div');
+    statusRow.className = 'status-row';
+
+    const statusDot = document.createElement('span');
+    statusDot.className = 'status-dot' + (incident.responded ? ' responded' : '');
+
+    const statusLabel = document.createElement('span');
+    statusLabel.className = 'status-label';
+    statusLabel.textContent = incident.responded ? 'Responding' : 'Not responded';
+
+    statusRow.appendChild(statusDot);
+    statusRow.appendChild(statusLabel);
+
+    const statusToggle = document.createElement('button');
+    statusToggle.type = 'button';
+    statusToggle.className = 'status-toggle';
+    statusToggle.textContent = incident.responded ? 'MARK AS NOT RESPONDED' : 'MARK AS RESPONDING';
+    statusToggle.addEventListener('click', () => {
+      incident.responded = !incident.responded;
+      marker.classList.toggle('responded', incident.responded);
+      marker.setAttribute('aria-label', incident.category + ': ' + incident.title +
+        ' (' + (incident.responded ? 'responding' : 'not responded') + ')');
+      selectIncident(incident, marker);
+    });
+
     const askBtn = document.createElement('button');
     askBtn.type = 'button';
     askBtn.className = 'ask-btn';
+    askBtn.style.marginTop = '16px';
     askBtn.textContent = 'ASK PROTOCOL →';
     askBtn.addEventListener('click', () => {
       setView('search');
@@ -5492,6 +5669,8 @@
     incidentPanel.appendChild(catLine);
     incidentPanel.appendChild(titleLine);
     incidentPanel.appendChild(zoneLine);
+    incidentPanel.appendChild(statusRow);
+    incidentPanel.appendChild(statusToggle);
     incidentPanel.appendChild(askBtn);
   }
 
@@ -5512,6 +5691,7 @@
     newIncidentBtn.hidden = true;
     placementHint.hidden = false;
     gridMap.classList.add('placing');
+    gridMap.focus();
   }
 
   function disarmPlacement() {
@@ -5519,6 +5699,20 @@
     newIncidentBtn.hidden = false;
     placementHint.hidden = true;
     gridMap.classList.remove('placing');
+  }
+
+  function nearestStreetName(x, y) {
+    let best = null;
+    let bestDist = Infinity;
+    for (let i = 0; i < STREET_POINTS.length; i++) {
+      const [px, py, name] = STREET_POINTS[i];
+      const d = (px - x) * (px - x) + (py - y) * (py - y);
+      if (d < bestDist) {
+        bestDist = d;
+        best = name;
+      }
+    }
+    return best || '';
   }
 
   function openCreateForm(x, y) {
@@ -5529,7 +5723,9 @@
 
     const catLabel = document.createElement('label');
     catLabel.textContent = 'Category';
+    catLabel.htmlFor = 'incident-category';
     const catSelect = document.createElement('select');
+    catSelect.id = 'incident-category';
     Object.keys(CATEGORY_GLYPHS).forEach(cat => {
       const opt = document.createElement('option');
       opt.value = cat;
@@ -5539,20 +5735,27 @@
 
     const titleLabel = document.createElement('label');
     titleLabel.textContent = 'Title';
+    titleLabel.htmlFor = 'incident-title';
     const titleInput = document.createElement('input');
+    titleInput.id = 'incident-title';
     titleInput.type = 'text';
     titleInput.required = true;
     titleInput.placeholder = 'e.g. Gas leak — apartment complex';
 
     const zoneLabel = document.createElement('label');
     zoneLabel.textContent = 'Location';
+    zoneLabel.htmlFor = 'incident-zone';
     const zoneInput = document.createElement('input');
+    zoneInput.id = 'incident-zone';
     zoneInput.type = 'text';
     zoneInput.placeholder = 'e.g. North Main St';
+    zoneInput.value = nearestStreetName(x, y);
 
     const questionLabel = document.createElement('label');
     questionLabel.textContent = 'Protocol question';
+    questionLabel.htmlFor = 'incident-question';
     const questionInput = document.createElement('input');
+    questionInput.id = 'incident-question';
     questionInput.type = 'text';
     questionInput.required = true;
     questionInput.placeholder = 'What should ASK PROTOCOL search for?';
@@ -5596,7 +5799,8 @@
         x, y,
         title: titleInput.value.trim(),
         zone: zoneInput.value.trim() || 'Unnamed location',
-        question: questionInput.value.trim()
+        question: questionInput.value.trim(),
+        responded: false
       });
     });
 
@@ -5856,6 +6060,15 @@
     const y = (e.clientY - rect.top) / rect.height * MAP_H;
     disarmPlacement();
     openCreateForm(x, y);
+  });
+
+  gridMap.addEventListener('keydown', (e) => {
+    if (!placing) return;
+    if (e.key === 'Enter' || e.key === ' ') {
+      e.preventDefault();
+      disarmPlacement();
+      openCreateForm(MAP_W / 2, MAP_H / 2);
+    }
   });
 
   document.addEventListener('keydown', (e) => {
